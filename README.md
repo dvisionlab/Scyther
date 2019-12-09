@@ -43,6 +43,9 @@ In order to check the build and the python binding, open a shell and run:
 
 ## :open_file_folder: Modules 
 - `main` -> entry point for python binding or c++ stand-alone usage
+- `stack` -> manipulate volume 
+- `geometry` -> manipulate slice geometry
+- `test` -> testing code
 - `render` -> visualization tools (using VTK render), useful for debugging
 
 ## :world_map: Roadmap 
