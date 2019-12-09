@@ -13,6 +13,9 @@ Powered by VTK and binded to python using pybind11.
 ## Installation & build
 
 Clone repository:
+
+---
+
 `
 git clone https://github.com/dvisionlab/scyther 
 cd scyther
