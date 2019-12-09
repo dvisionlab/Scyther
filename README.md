@@ -1,5 +1,5 @@
 # Scyther
-## Curvilinear Multiplanar Reformat for Dicom Images 
+## Curvilinear Multiplanar Reformat for Dicom Images :man_health_worker: :desktop_computer:	
 ### Current version: 0.1.0
 
 This library provides reslicing related functionalities to probe a volume with a surface defined by the extrusion of an arbitrary curve.
@@ -10,7 +10,7 @@ Powered by VTK and binded to python using pybind11.
 - Install Visual Studio 2017+
 - Install cmake-gui
 
-## Installation & build
+## Installation & build :building_construction:
 
 Clone repository:
 
@@ -41,13 +41,13 @@ In order to check the build and the python binding, open a shell and run:
     $ pyhton
     >>> import pyCmpr
 
-## Modules
+## Modules :open_file_folder:  :page_with_curl:
 - `main` -> entry point for python binding or c++ stand-alone usage
 - `render` -> visualization tools (using VTK render), useful for debugging
 
 ## Roadmap :world_map:
-- Spatial points remapping
+[ ] Spatial points remapping
 
-## Dependencies
+## Dependencies :family_man_woman_girl_boy:
 - VTK
 - Pybind11
