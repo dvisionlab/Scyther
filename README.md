@@ -35,7 +35,7 @@ Open and build with Visual Studio.
 
 In order to check the build and the python binding, open a shell and run:
 $ pyhton
->>> import pyCmpr
+$ >>> import pyCmpr
 
 # Modules
 - `main` -> entry point for python binding or c++ stand-alone usage
