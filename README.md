@@ -14,7 +14,7 @@ Powered by VTK and binded to python using pybind11.
 
 Clone repository:
 `
-$ git clone https://github.com/dvisionlab/scyther
+$ git clone https://github.com/dvisionlab/scyther \n
 $ cd scyther
 `
 Clone and install pybind11:
