@@ -46,7 +46,7 @@ In order to check the build and the python binding, open a shell and run:
 - `render` -> visualization tools (using VTK render), useful for debugging
 
 ## :world_map: Roadmap 
-[ ] Spatial points remapping
+[x] Spatial points remapping
 
 ## :family_man_woman_boy: Dependencies 
 - VTK
