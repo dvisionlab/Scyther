@@ -33,6 +33,7 @@
 // custom libs
 #include "utils.h"
 #include "render.h"
+#include "test.h"
 
 // std::vector<int> compute_cmpr (std::string volumeFileName, std::string polyDataFileName, unsigned int resolution, double dx, double dy, double dz, double distance)
 std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, double distance, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
@@ -104,7 +105,7 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   return values;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
   // TODO get input from argv:
   // - nrrd file path
@@ -112,6 +113,34 @@ int main()
   // - resolution
   // - direction
   // then convert file to points array
+
+    // Verify arguments
+  if (argc < 4)
+  {
+      std::cout << "Usage: " << argv[0]
+                << " InputVolume PolyDataInput"
+                << " Resolution"
+                << std::endl;
+      return EXIT_FAILURE;
+  }
+
+  // Parse arguments
+  std::string volumeFileName = argv[1];
+  std::string polyDataFileName = argv[2];
+  unsigned int resolution;
+
+  // Output arguments
+  std::cout << "InputVolume: " << volumeFileName << std::endl
+            << "PolyDataInput: " << polyDataFileName << std::endl
+            << "Resolution: " << resolution << std::endl;
+
+  // Read the Polyline
+  vtkSmartPointer<vtkPolyDataReader> polyLineReader =
+    vtkSmartPointer<vtkPolyDataReader>::New();
+  polyLineReader->SetFileName(polyDataFileName.c_str());
+  polyLineReader->Update();
+
+  std::cout << "---> " << polyLineReader->GetOutput()->GetNumberOfPoints() << std::endl;
 
   return 0;
 }
