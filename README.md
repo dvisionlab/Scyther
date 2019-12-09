@@ -45,7 +45,7 @@ In order to check the build and the python binding, open a shell and run:
 - `main` -> entry point for python binding or c++ stand-alone usage
 - `render` -> visualization tools (using VTK render), useful for debugging
 
-## Roadmap
+## Roadmap :world_map:
 - Spatial points remapping
 
 ## Dependencies
