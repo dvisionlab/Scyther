@@ -1,0 +1,9 @@
+# Build dir
+build
+
+# Pybind dir
+pybind11
+
+# Editor directories and files
+.vscode
+.*~
