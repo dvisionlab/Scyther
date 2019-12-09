@@ -10,7 +10,7 @@ Powered by VTK and binded to python using pybind11.
 - Install Visual Studio 2017+
 - Install cmake-gui
 
-## Installation & build :building_construction:
+## :building_construction: Installation & build 
 
 Clone repository:
 
@@ -41,13 +41,13 @@ In order to check the build and the python binding, open a shell and run:
     $ pyhton
     >>> import pyCmpr
 
-## Modules :open_file_folder:  :page_with_curl:
+## :open_file_folder: Modules 
 - `main` -> entry point for python binding or c++ stand-alone usage
 - `render` -> visualization tools (using VTK render), useful for debugging
 
-## Roadmap :world_map:
+## :world_map: Roadmap 
 [ ] Spatial points remapping
 
-## Dependencies :family_man_woman_girl_boy:
+## :family_man_woman_boy: Dependencies 
 - VTK
 - Pybind11
