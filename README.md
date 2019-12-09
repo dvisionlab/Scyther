@@ -41,13 +41,13 @@ In order to check the build and the python binding, open a shell and run:
     $ pyhton
     >>> import pyCmpr
 
-# Modules
+## Modules
 - `main` -> entry point for python binding or c++ stand-alone usage
 - `render` -> visualization tools (using VTK render), useful for debugging
 
-# Roadmap
+## Roadmap
 - Spatial points remapping
 
-# Dependencies
+## Dependencies
 - VTK
 - Pybind11
