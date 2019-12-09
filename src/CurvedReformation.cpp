@@ -31,7 +31,7 @@
 #include <vtkAppendPolyData.h>
 
 // custom libs
-#include "utils.h"
+#include "stack.h"
 #include "render.h"
 #include "test.h"
 
