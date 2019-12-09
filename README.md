@@ -14,19 +14,20 @@ Powered by VTK and binded to python using pybind11.
 
 Clone repository:  
 `
-git clone https://github.com/dvisionlab/scyther   
+git clone https://github.com/dvisionlab/scyther
+  
 cd scyther  
-`
+`  
 Clone and install pybind11:  
 `
 git clone https://github.com/pybind/pybind11  
 cd pybind11  
 python setup.py install  
-`
+`  
 Then, from the project root, run cmake:  
 `
 cmake-gui ./src ./build  
-`
+`  
 
 - set `USE_PYHTON_INCLUDE_DIR ON`
 - set `CMAKE_CONFIGURATION_TYPES Release`
@@ -41,7 +42,7 @@ In order to check the build and the python binding, open a shell and run:
 `
 pyhton  
 >>> import pyCmpr  
-`
+`  
 
 # Modules
 - `main` -> entry point for python binding or c++ stand-alone usage
