@@ -10,8 +10,10 @@ include(${VTK_USE_FILE})
 find_package(ITK REQUIRED)
 include(${ITK_USE_FILE})
 
+# include pybind11
+find_path(PYBIND_DIRECTORY ${PYBIND_DIRECTORY} pybind11.egg-info)
 # add pybind11
-add_subdirectory(../pybind11 ../pybind11)
+add_subdirectory(${PYBIND_DIRECTORY} ${PYBIND_DIRECTORY})
 
 # include vmtk headers
 find_path(VMTK_DIRECTORY ${VMTK_DIRECTORY} vmtk_env.sh)
@@ -37,4 +39,5 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 pybind11_add_module(pyCmpr CurvedReformation.cpp)
 
 # link external libraries
+set_property(TARGET pyCmpr PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(pyCmpr PRIVATE ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${vmtk} )

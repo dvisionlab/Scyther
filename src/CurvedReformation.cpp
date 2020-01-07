@@ -14,13 +14,6 @@
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
 #include <vtkPolyData.h>
-#include <vtkWindowLevelLookupTable.h>
-#include <vtkDataSetMapper.h>
-#include <vtkActor.h>
-#include <vtkCamera.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindowInteractor.h>
 #include <vtkNrrdReader.h>
 #include <vtkArrayData.h>
 #include <vtkPointData.h>
@@ -30,10 +23,18 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 
+// #include <vtkWindowLevelLookupTable.h> // ---> error !
+// #include <vtkDataSetMapper.h> // ---> error !
+// #include <vtkActor.h> // ---> error !
+// #include <vtkCamera.h> // ---> error !
+// #include <vtkRenderWindow.h> // ---> error !
+// #include <vtkRenderer.h> // ---> error !
+// #include <vtkRenderWindowInteractor.h> // ---> error !
+
 // custom libs
 #include "stack.h"
-#include "render.h"
-#include "test.h"
+// #include "render.h"
+// #include "test.h"
 
 // std::vector<int> compute_cmpr (std::string volumeFileName, std::string polyDataFileName, unsigned int resolution, double dx, double dy, double dz, double distance)
 std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, double distance, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
@@ -94,10 +95,10 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   std::cout << "Total : " << difftime(time_1, time_0) << "[s]" << std::endl;
 
   // Render
-  if (render)
-  {
-    int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
-  }
+  // if (render)
+  // {
+  //   int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
+  // }
 
   // Get values from probe output
   std::vector<int> values = GetPixelValues(sampleVolume->GetOutput());
