@@ -128,5 +128,15 @@ std::vector<float> GetPixelValues(vtkDataSet *dataset)
   return values;
 }
 
+std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> stack)
+{
+  std::vector<float> dimensions;
 
+  float plane_edge = floor(sqrt(stack[0]->GetNumberOfPoints())); 
+  dimensions.push_back(plane_edge);
+  dimensions.push_back(plane_edge);
+  dimensions.push_back(stack.size());
+
+  return dimensions;
+}
 

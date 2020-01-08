@@ -30,6 +30,7 @@
 #ifdef DYNAMIC_VMTK
   #include <vtkWindowLevelLookupTable.h> 
   #include <vtkDataSetMapper.h> 
+  #include <vtkPolyDataMapper.h> 
   #include <vtkActor.h> 
   #include <vtkCamera.h> 
   #include <vtkRenderWindow.h> 
@@ -49,10 +50,18 @@
 // - create stack in both direction DONE
 // - return metadata DONE
 // - set ifdef for linking static vmtk DONE
-// - create pseudo axial stack (slices along spline)
+// - create pseudo axial stack (slices along spline) DONE
+// - render source spline for debug DONE
+// - return stack dimensions DONE
 
-// std::vector<int> compute_cmpr (std::string volumeFileName, std::string polyDataFileName, unsigned int resolution, double dx, double dy, double dz, double distance)
-std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
+std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileName, 
+                                                        std::vector<float> seeds, 
+                                                        unsigned int resolution, 
+                                                        std::vector<int> dir, 
+                                                        std::vector<float> stack_direction, 
+                                                        float dist_slices, 
+                                                        int n_slices, 
+                                                        bool render)
 {
   time_t time_0;
   time(&time_0);
@@ -86,7 +95,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 
   // Create a spline from input seeds
   vtkSmartPointer<vtkPolyData> spline = vtkSmartPointer<vtkPolyData>::New();
-  spline = CreateSpline(seeds, resolution, origin, neg_direction);
+  spline = CreateSpline(seeds, resolution, origin, neg_direction, true);
 
   // Compute sweep distance
   double distance;
@@ -150,7 +159,11 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   // Render
   if (render)
   {
-    int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
+    // Render source spline
+    vtkSmartPointer<vtkPolyData> original_spline = vtkSmartPointer<vtkPolyData>::New();
+    original_spline = CreateSpline(seeds, resolution, origin, neg_direction, false);
+
+    int res = renderAll(original_spline, sampleVolumeAxial, reader->GetOutput(), resolution);
   }
 #endif
 
@@ -160,9 +173,15 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 
   std::map<std::string, std::vector<float>> response;
 
+  // TODO return these values:
+  std::vector<float> dimension_cmpr = GetDimensions(stack_map);
+  std::vector<float> dimension_axial = GetDimensions(axial_stack_map);
+
   response["metadata"] = metadata;
   response["pixels_cmpr"] = values_cmpr;
   response["pixels_axial"] = values_axial;
+  response["dimension_cmpr"] = dimension_cmpr;
+  response["dimension_axial"] = dimension_axial;
 
   return response;
 }

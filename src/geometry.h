@@ -1,6 +1,6 @@
 
 // Create a spline from an array of xyz points
-vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resolution, double origin[3], double normal[3])
+vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resolution, double origin[3], double normal[3], bool project)
 {
   // Create a vtkPoints object and store the points in it, projecting them on the boundary plane
   vtkSmartPointer<vtkPoints> points =
@@ -15,18 +15,19 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
   double projected[3];  
 
   for ( auto i = seeds.begin(); i != seeds.end(); i+=3 ) {
-    std::cout << *i << " " << *(i+1) << " " << *(i+2) << std::endl;
-
+    // std::cout << *i << " " << *(i+1) << " " << *(i+2) << std::endl;
     p[0]= *i;
     p[1]= *(i+1);
     p[2]= *(i+2);
-    plane->ProjectPoint(p, origin, normal, projected);
-    // points->InsertNextPoint(*i, *(i+1), *(i+2));
-
-    std::cout << "SRC: " << p[0] << ", " << p[1] << ", " << p[2] << std::endl;
-    std::cout << "PRJ: " << projected[0] << ", " << projected[1] << ", " << projected[2] << std::endl;
-
-    points->InsertNextPoint(projected);
+    if (project)
+    {
+      plane->ProjectPoint(p, origin, normal, projected);
+      points->InsertNextPoint(projected);
+    }
+    else 
+    {
+      points->InsertNextPoint(p);
+    }
   } 
 
   vtkSmartPointer<vtkPolyLine> polyLine =

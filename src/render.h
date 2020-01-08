@@ -21,7 +21,7 @@ vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, int resolution)
 }
 
 // Render curved & plane surfaces
-int renderAll(vtkProbeFilter *sampleVolume, vtkImageData* image, int resolution)
+int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData* image, int resolution)
 {
   vtkSmartPointer<vtkPolyData> viewPlane = GetPlanar(sampleVolume->GetOutput()->GetPointData()->GetArray("ImageFile"), resolution);
 
@@ -39,7 +39,9 @@ int renderAll(vtkProbeFilter *sampleVolume, vtkImageData* image, int resolution)
   std::cout << "range: " << range << std::endl;
   std::cout << "level: " << level << std::endl;
 
-  // Create a mapper and actor.
+  vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+  mapper->SetInputData(spline);
+  
   vtkSmartPointer<vtkDataSetMapper> mapper1 = vtkSmartPointer<vtkDataSetMapper>::New();
   mapper1->SetInputData(viewPlane);
   mapper1->SetLookupTable(wlLut);
@@ -49,6 +51,9 @@ int renderAll(vtkProbeFilter *sampleVolume, vtkImageData* image, int resolution)
   mapper2->SetInputConnection(sampleVolume->GetOutputPort());
   mapper2->SetLookupTable(wlLut);
   mapper2->SetScalarRange(image->GetScalarRange()[0] , image->GetScalarRange()[1]);
+
+  vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+  actor->SetMapper(mapper);
 
   vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
   actor1->SetMapper(mapper1);
@@ -64,6 +69,7 @@ int renderAll(vtkProbeFilter *sampleVolume, vtkImageData* image, int resolution)
   renderWindowInteractor->SetRenderWindow(renderWindow);
 
   // Add the actors to the scene
+  renderer->AddActor(actor);
   renderer->AddActor(actor1);
   renderer->AddActor(actor2);
   renderer->SetBackground(.2, .3, .4);
