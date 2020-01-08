@@ -135,3 +135,21 @@ vtkSmartPointer<vtkPolyData> ShiftMasterSlice(vtkPolyData *original_surface, int
 
   return transformFilter->GetOutput();
 }
+
+vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3], int resolution)
+{
+
+  origin[0] += 200.0; // FIXME why this ??
+
+  vtkSmartPointer<vtkPlaneSource> targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
+  targetPlane->SetOrigin(0.0, 0.0, 0.0);
+  targetPlane->SetPoint1(413.0, 0.0, 0.0);
+  targetPlane->SetPoint2(0.0, 413.0, 0.0);
+  targetPlane->SetNormal(normal);
+  targetPlane->SetCenter(origin);
+  targetPlane->SetXResolution(resolution); 
+  targetPlane->SetYResolution(resolution);
+  targetPlane->Update();
+
+  return targetPlane->GetOutput();
+}

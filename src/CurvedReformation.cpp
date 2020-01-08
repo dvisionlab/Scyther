@@ -1,3 +1,6 @@
+// comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
+#define DYNAMIC_VMTK
+
 // std libs
 #include <vector>
 
@@ -24,26 +27,32 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 
-#include <vtkWindowLevelLookupTable.h> // ---> error !
-#include <vtkDataSetMapper.h> // ---> error !
-#include <vtkActor.h> // ---> error !
-#include <vtkCamera.h> // ---> error !
-#include <vtkRenderWindow.h> // ---> error !
-#include <vtkRenderer.h> // ---> error !
-#include <vtkRenderWindowInteractor.h> // ---> error !
+#ifdef DYNAMIC_VMTK
+  #include <vtkWindowLevelLookupTable.h> 
+  #include <vtkDataSetMapper.h> 
+  #include <vtkActor.h> 
+  #include <vtkCamera.h> 
+  #include <vtkRenderWindow.h> 
+  #include <vtkRenderer.h> 
+  #include <vtkRenderWindowInteractor.h> 
+
+  #include "render.h"
+#endif
 
 // custom libs
 #include "stack.h"
-#include "render.h"
 #include "test.h"
 
+
 // TODO 
-// - project spline on volume bound plane using extrusion direction negated
-// - create stack in both direction 
-// - return metadata
+// - project spline on volume bound plane using extrusion direction negated DONE
+// - create stack in both direction DONE
+// - return metadata DONE
+// - set ifdef for linking static vmtk DONE
+// - create pseudo axial stack (slices along spline)
 
 // std::vector<int> compute_cmpr (std::string volumeFileName, std::string polyDataFileName, unsigned int resolution, double dx, double dy, double dz, double distance)
-std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
+std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
 {
   time_t time_0;
   time(&time_0);
@@ -103,17 +112,23 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   // Squash stack map into a single polydata
   vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map);
 
-  for (int i = 0; i < stack_map.size(); i++) 
-  {
-    // std::cout << i << " stack: " << stack_map[i]->GetNumberOfPoints() << std::endl;
-  }
+  // Compute axial stack
+  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(spline, 413);
+
+  // Squash stack map into a single polydata
+  vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map);
+
+  // for (int i = 0; i < stack_map.size(); i++) 
+  // {
+  //    std::cout << i << " stack: " << stack_map[i]->GetNumberOfPoints() << std::endl;
+  // }
  
   std::cout << "complete_stack number of points: " << complete_stack->GetNumberOfPoints() << std::endl;
  
   // Probe the volume with the extruded surface
   vtkSmartPointer<vtkProbeFilter> sampleVolume = vtkSmartPointer<vtkProbeFilter>::New();
   sampleVolume->SetInputConnection(1, reader->GetOutputPort());
-  sampleVolume->SetInputData(0, complete_stack);
+  sampleVolume->SetInputData(0, complete_axial_stack);
   sampleVolume->Update();
 
   // Test 
@@ -126,16 +141,23 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
 
   std::cout << "Total : " << difftime(time_1, time_0) << "[s]" << std::endl;
 
+#ifdef DYNAMIC_VMTK
   // Render
   if (render)
   {
     int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
   }
+#endif
 
   // Get values from probe output
-  std::vector<int> values = GetPixelValues(sampleVolume->GetOutput());
+  std::vector<float> values = GetPixelValues(sampleVolume->GetOutput());
 
-  return values;
+  std::map<std::string, std::vector<float>> response;
+
+  response["metadata"] = metadata;
+  response["pixel_values"] = values;
+
+  return response;
 }
 
 int main(int argc, char *argv[])

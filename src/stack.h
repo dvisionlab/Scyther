@@ -45,17 +45,45 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slic
   time(&time_0);
 
   vtkMath::MultiplyScalar(direction.data(), dist_slices);
+  int slice_id = 0;
 
-  for (int s = 0; s < n_slices; s++)
+  for (int s = -n_slices/2; s < n_slices/2; s++)
   {
-    // std::cout << "shifting slice " << s << std::endl;
-    stack[s] = ShiftMasterSlice(master_slice, s, direction);
+    slice_id = s + n_slices/2;
+    stack[slice_id] = ShiftMasterSlice(master_slice, s, direction);
   }
 
   time_t time_1;
   time(&time_1);
 
   std::cout << "CreateStack tooks : " << difftime(time_1, time_0) << " [s]" << std::endl;
+
+  return stack;
+}
+
+std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, int resolution)
+{
+  std::map<int, vtkSmartPointer<vtkPolyData>> stack;
+
+  vtkSmartPointer<vtkPolyData> targetPlane = vtkSmartPointer<vtkPolyData>::New();
+
+  double p0[3];
+  double p1[3];
+  double n[3];
+  
+  for (int frame=0; frame<spline->GetNumberOfPoints()-1; frame+=10) // DEV restore ++
+  {
+    spline->GetPoint(frame, p0);
+    spline->GetPoint(frame+1, p1);
+
+    
+    n[0] = p1[0]-p0[0];
+    n[1] = p1[1]-p0[1];
+    n[2] = p1[2]-p0[2];
+    
+    targetPlane = GetOrientedPlane(p0, n, resolution);    
+    stack[frame] = targetPlane; 
+  }
 
   return stack;
 }
@@ -86,9 +114,9 @@ vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> 
   return appendFilter->GetOutput();
 }
 
-std::vector<int> GetPixelValues(vtkDataSet *dataset)
+std::vector<float> GetPixelValues(vtkDataSet *dataset)
 {
-  std::vector<int> values;
+  std::vector<float> values;
 
   for (int i = 0; i < dataset->GetNumberOfPoints(); i++)
   {
