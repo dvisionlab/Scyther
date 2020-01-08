@@ -8,7 +8,7 @@
 
 #include "geometry.h"
 
-void GetMetadata(vtkImageData *image)
+std::vector<float> GetMetadata(vtkImageData *image)
 {
   // Store the image and print some infos
   std::cout << "ORIGIN: "
@@ -17,7 +17,24 @@ void GetMetadata(vtkImageData *image)
             << image->GetDimensions()[0] << ", " << image->GetDimensions()[1] << ", " << image->GetDimensions()[2] << std::endl
             << "BOUNDS: "
             << image->GetBounds()[0] << ", " << image->GetBounds()[1] << ", " << image->GetBounds()[2] << std::endl
-            << image->GetBounds()[0] << ", " << image->GetBounds()[1] << ", " << image->GetBounds()[2] << std::endl;
+            << image->GetBounds()[3] << ", " << image->GetBounds()[4] << ", " << image->GetBounds()[5] << std::endl;
+
+  std::vector<float> metadata;
+  
+  metadata.push_back(image->GetOrigin()[0]);
+  metadata.push_back(image->GetOrigin()[1]);
+  metadata.push_back(image->GetOrigin()[2]);
+  metadata.push_back(image->GetDimensions()[0]);
+  metadata.push_back(image->GetDimensions()[1]);
+  metadata.push_back(image->GetDimensions()[2]);
+  metadata.push_back(image->GetBounds()[0]);
+  metadata.push_back(image->GetBounds()[1]);
+  metadata.push_back(image->GetBounds()[2]);
+  metadata.push_back(image->GetBounds()[3]);
+  metadata.push_back(image->GetBounds()[4]);
+  metadata.push_back(image->GetBounds()[5]);
+
+  return metadata;
 }
 
 std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slice, int n_slices, std::vector<float> direction, float dist_slices)

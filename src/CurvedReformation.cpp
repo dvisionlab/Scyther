@@ -12,6 +12,7 @@
 #include <vtkImageData.h>
 #include <vtkSplineFilter.h>
 #include <vtkPoints.h>
+#include <vtkPlane.h>
 #include <vtkCellArray.h>
 #include <vtkPolyData.h>
 #include <vtkNrrdReader.h>
@@ -23,26 +24,31 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 
-// #include <vtkWindowLevelLookupTable.h> // ---> error !
-// #include <vtkDataSetMapper.h> // ---> error !
-// #include <vtkActor.h> // ---> error !
-// #include <vtkCamera.h> // ---> error !
-// #include <vtkRenderWindow.h> // ---> error !
-// #include <vtkRenderer.h> // ---> error !
-// #include <vtkRenderWindowInteractor.h> // ---> error !
+#include <vtkWindowLevelLookupTable.h> // ---> error !
+#include <vtkDataSetMapper.h> // ---> error !
+#include <vtkActor.h> // ---> error !
+#include <vtkCamera.h> // ---> error !
+#include <vtkRenderWindow.h> // ---> error !
+#include <vtkRenderer.h> // ---> error !
+#include <vtkRenderWindowInteractor.h> // ---> error !
 
 // custom libs
 #include "stack.h"
-// #include "render.h"
-// #include "test.h"
+#include "render.h"
+#include "test.h"
+
+// TODO 
+// - project spline on volume bound plane using extrusion direction negated
+// - create stack in both direction 
+// - return metadata
 
 // std::vector<int> compute_cmpr (std::string volumeFileName, std::string polyDataFileName, unsigned int resolution, double dx, double dy, double dz, double distance)
-std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, double distance, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
+std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
 {
   time_t time_0;
   time(&time_0);
 
-  // Parse input
+  // Parse input 
   double direction[3];
   std::copy(dir.begin(), dir.end(), direction);
 
@@ -56,11 +62,37 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   reader->SetFileName(volumeFileName.c_str());
   reader->Update();
 
-  GetMetadata(reader->GetOutput()); // TODO return to python in someway
+  std::vector<float> metadata = GetMetadata(reader->GetOutput()); // TODO return to python in someway
+
+  double origin[3] = {
+    metadata[0],
+    metadata[1],
+    metadata[2],
+  };
+  double neg_direction[3] = {
+    -direction[0],
+    -direction[1],
+    -direction[2]
+  };
 
   // Create a spline from input seeds
   vtkSmartPointer<vtkPolyData> spline = vtkSmartPointer<vtkPolyData>::New();
-  spline = CreateSpline(seeds, resolution);
+  spline = CreateSpline(seeds, resolution, origin, neg_direction);
+
+  // Compute sweep distance
+  double distance;
+  // TODO get max direction
+  if (direction[0] == 1.0){
+    distance = metadata[7] - metadata[6];
+  }
+  else if (direction[1] == 1.0){
+    distance = metadata[9] - metadata[8];
+  }
+  else if (direction[2] == 1.0){
+    distance = metadata[11] - metadata[10];
+  }
+
+  std::cout << "DISTANCE " << distance << std::endl;
 
   // Sweep the line to form a surface
   vtkSmartPointer<vtkPolyData> master_slice = SweepLine(spline, direction, distance, resolution);
@@ -71,20 +103,20 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   // Squash stack map into a single polydata
   vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map);
 
-  for (int i = 0; i < stack_map.size(); i++)
+  for (int i = 0; i < stack_map.size(); i++) 
   {
     // std::cout << i << " stack: " << stack_map[i]->GetNumberOfPoints() << std::endl;
   }
-
+ 
   std::cout << "complete_stack number of points: " << complete_stack->GetNumberOfPoints() << std::endl;
-
+ 
   // Probe the volume with the extruded surface
   vtkSmartPointer<vtkProbeFilter> sampleVolume = vtkSmartPointer<vtkProbeFilter>::New();
   sampleVolume->SetInputConnection(1, reader->GetOutputPort());
   sampleVolume->SetInputData(0, complete_stack);
   sampleVolume->Update();
 
-  // Test
+  // Test 
   // bool response = test_alg(viewPlane, sampleVolume->GetOutput());
   // if (response) std::cout << "test passed" << std::endl;
   // else std::cout << "test failed" << std::endl;
@@ -95,10 +127,10 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   std::cout << "Total : " << difftime(time_1, time_0) << "[s]" << std::endl;
 
   // Render
-  // if (render)
-  // {
-  //   int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
-  // }
+  if (render)
+  {
+    int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
+  }
 
   // Get values from probe output
   std::vector<int> values = GetPixelValues(sampleVolume->GetOutput());
@@ -126,7 +158,7 @@ int main(int argc, char *argv[])
   }
 
   // Parse arguments
-  std::string volumeFileName = argv[1];
+  std::string volumeFileName = argv[1]; 
   std::string polyDataFileName = argv[2];
   unsigned int resolution;
 

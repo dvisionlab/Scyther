@@ -43,12 +43,12 @@ int renderAll(vtkProbeFilter *sampleVolume, vtkImageData* image, int resolution)
   vtkSmartPointer<vtkDataSetMapper> mapper1 = vtkSmartPointer<vtkDataSetMapper>::New();
   mapper1->SetInputData(viewPlane);
   mapper1->SetLookupTable(wlLut);
-  mapper1->SetScalarRange(0, 255);
+  mapper1->SetScalarRange(image->GetScalarRange()[0], image->GetScalarRange()[1]);
 
   vtkSmartPointer<vtkDataSetMapper> mapper2 = vtkSmartPointer<vtkDataSetMapper>::New();
   mapper2->SetInputConnection(sampleVolume->GetOutputPort());
   mapper2->SetLookupTable(wlLut);
-  mapper2->SetScalarRange(0, 255);
+  mapper2->SetScalarRange(image->GetScalarRange()[0] , image->GetScalarRange()[1]);
 
   vtkSmartPointer<vtkActor> actor1 = vtkSmartPointer<vtkActor>::New();
   actor1->SetMapper(mapper1);
