@@ -125,11 +125,16 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
  
   std::cout << "complete_stack number of points: " << complete_stack->GetNumberOfPoints() << std::endl;
  
-  // Probe the volume with the extruded surface
+  // Probe the volume with the extruded surfaces
   vtkSmartPointer<vtkProbeFilter> sampleVolume = vtkSmartPointer<vtkProbeFilter>::New();
   sampleVolume->SetInputConnection(1, reader->GetOutputPort());
-  sampleVolume->SetInputData(0, complete_axial_stack);
+  sampleVolume->SetInputData(0, complete_stack);
   sampleVolume->Update();
+
+  vtkSmartPointer<vtkProbeFilter> sampleVolumeAxial = vtkSmartPointer<vtkProbeFilter>::New();
+  sampleVolumeAxial->SetInputConnection(1, reader->GetOutputPort());
+  sampleVolumeAxial->SetInputData(0, complete_axial_stack);
+  sampleVolumeAxial->Update();
 
   // Test 
   // bool response = test_alg(viewPlane, sampleVolume->GetOutput());
@@ -150,12 +155,14 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 #endif
 
   // Get values from probe output
-  std::vector<float> values = GetPixelValues(sampleVolume->GetOutput());
+  std::vector<float> values_cmpr = GetPixelValues(sampleVolume->GetOutput());
+  std::vector<float> values_axial = GetPixelValues(sampleVolumeAxial->GetOutput());
 
   std::map<std::string, std::vector<float>> response;
 
   response["metadata"] = metadata;
-  response["pixel_values"] = values;
+  response["pixels_cmpr"] = values_cmpr;
+  response["pixels_axial"] = values_axial;
 
   return response;
 }
