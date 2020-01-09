@@ -1,5 +1,5 @@
 // comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-#define DYNAMIC_VMTK
+// #define DYNAMIC_VMTK
 
 // std libs
 #include <vector>
@@ -122,10 +122,10 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map, false);
 
   // Compute axial stack
-  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(spline, 413);
+  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(spline, resolution);
 
   // Squash stack map into a single polydata
-  vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map, true);
+  vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map, false);
 
   // for (int i = 0; i < stack_map.size(); i++) 
   // {
