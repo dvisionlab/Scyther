@@ -71,7 +71,7 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline
   double p1[3];
   double n[3];
   
-  for (int frame=0; frame<spline->GetNumberOfPoints()-1; frame+=10) // DEV restore ++
+  for (int frame=0; frame<spline->GetNumberOfPoints()-1; frame++)
   {
     spline->GetPoint(frame, p0);
     spline->GetPoint(frame+1, p1);
