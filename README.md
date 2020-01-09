@@ -7,8 +7,8 @@ Powered by VTK and binded to python using pybind11.
 
 ### Pre-requisite
 - Install vmtk : see https://github.com/vmtk/vmtk
-- Install Visual Studio 2017+
-- Install cmake-gui
+- Install Visual Studio 2017+ / a c++ compiler
+- Install cmake-gui / ccmake
 
 ## :building_construction: Installation & build 
 
@@ -49,9 +49,11 @@ In order to check the build and the python binding, open a shell and run:
 - `render` -> visualization tools (using VTK render), useful for debugging
 
 ## :world_map: Roadmap 
-- [ ] Return image pseudo-header
+- [x] Return image pseudo-header
 - [ ] Spatial points remapping
+- [ ] Update readme
+- [ ] Open issue for vmtk static on Linux
 
 ## :family_man_woman_boy: Dependencies 
-- VTK
+- VTK / ITK / VMTK
 - Pybind11
