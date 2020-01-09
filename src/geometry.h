@@ -53,11 +53,11 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
   // Add the lines to the dataset
   polyData->SetLines(cells);
 
-    // Sample polyline to spline
+  // Sample polyline to spline
   vtkSmartPointer<vtkSplineFilter> spline = vtkSmartPointer<vtkSplineFilter>::New();
   spline->SetInputData(polyData);
   spline->SetSubdivideToSpecified();
-  spline->SetNumberOfSubdivisions(resolution);
+  spline->SetNumberOfSubdivisions(resolution-1); // n subdivisions = n+1 points
   spline->Update();
 
   return spline->GetOutput();
@@ -153,4 +153,21 @@ vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3]
   targetPlane->Update();
 
   return targetPlane->GetOutput();
+}
+
+double GetMeanDistanceBtwPoints(vtkSmartPointer<vtkPolyData> spline)
+{
+  double p1[3];
+  double p2[3];
+  double sum = 0;
+  int numberOfSegments = spline->GetNumberOfPoints()-1;
+
+  for (int i = 0; i < numberOfSegments; i++) 
+  {
+    spline->GetPoint(i, p1);
+    spline->GetPoint(i+1, p2);
+    sum += sqrt(vtkMath::Distance2BetweenPoints(p1,p2));
+  }
+
+  return sum / double(numberOfSegments);
 }

@@ -27,14 +27,11 @@ int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData* i
 
   // Compute a simple window/level based on scalar range
   vtkSmartPointer<vtkWindowLevelLookupTable> wlLut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-  double range = image->GetScalarRange()[1] -
-                 image->GetScalarRange()[0];
-  double level = (image->GetScalarRange()[1] +
-                  image->GetScalarRange()[0]) /
-                 2.0;
+  double range = GetWindowWidth(image);
+  double level = range / 2.0;
 
   wlLut->SetWindow(range);
-  wlLut->SetLevel(level);
+  wlLut->SetLevel(level); 
 
   std::cout << "range: " << range << std::endl;
   std::cout << "level: " << level << std::endl;
