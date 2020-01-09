@@ -1,5 +1,5 @@
 // comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-#define DYNAMIC_VMTK
+// #define DYNAMIC_VMTK
 
 // std libs
 #include <vector>
@@ -182,12 +182,12 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   std::vector<float> dimension_cmpr = GetDimensions(stack_map);
   std::vector<float> dimension_axial = GetDimensions(axial_stack_map);
   std::vector<float> spacing_cmpr = {
-    float(resolution),
+    float(distance / resolution),
     mean_pts_distance
   };
   std::vector<float> spacing_axial = {
-    float(resolution),
-    float(resolution)
+    1.0,
+    1.0
   };
   std::vector<float> wwwl_cmpr = {
     range,
