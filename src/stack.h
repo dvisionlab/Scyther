@@ -88,7 +88,7 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline
   return stack;
 }
 
-vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> stack_map)
+vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> stack_map, bool reverse)
 {
 
   time_t time_0;
@@ -99,9 +99,19 @@ vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> 
   vtkSmartPointer<vtkAppendPolyData> appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
   appendFilter->AddInputData(squashed);
 
-  for (int p = 0; p < stack_map.size(); p++)
+  if (reverse)
   {
-    appendFilter->AddInputData(stack_map[p]);
+    for (int p = stack_map.size(); p >= 0; p--)
+    {
+      appendFilter->AddInputData(stack_map[p]);
+    }
+  }
+  else 
+  {
+    for (int q = 0; q < stack_map.size(); q++)
+    {
+      appendFilter->AddInputData(stack_map[q]);
+    }
   }
 
   appendFilter->Update();
@@ -114,13 +124,23 @@ vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> 
   return appendFilter->GetOutput();
 }
 
-std::vector<float> GetPixelValues(vtkDataSet *dataset)
+std::vector<float> GetPixelValues(vtkDataSet *dataset, bool reverse)
 {
   std::vector<float> values;
 
-  for (int i = 0; i < dataset->GetNumberOfPoints(); i++)
+  if (reverse)
   {
-    values.push_back(dataset->GetPointData()->GetArray("ImageFile")->GetTuple(i)[0]);
+    for (int i = dataset->GetNumberOfPoints(); i > 0; i--)
+    {
+      values.push_back(dataset->GetPointData()->GetArray("ImageFile")->GetTuple(i)[0]);
+    }
+  }
+  else
+  {
+    for (int j = 0; j < dataset->GetNumberOfPoints(); j++)
+    {
+      values.push_back(dataset->GetPointData()->GetArray("ImageFile")->GetTuple(j)[0]);
+    }
   }
 
   std::cout << "array filled with " << values.size() << " elements. " << std::endl;
