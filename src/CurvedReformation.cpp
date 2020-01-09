@@ -1,3 +1,6 @@
+// comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
+#define DYNAMIC_VMTK
+
 // std libs
 #include <vector>
 
@@ -12,6 +15,7 @@
 #include <vtkImageData.h>
 #include <vtkSplineFilter.h>
 #include <vtkPoints.h>
+#include <vtkPlane.h>
 #include <vtkCellArray.h>
 #include <vtkPolyData.h>
 #include <vtkNrrdReader.h>
@@ -23,26 +27,46 @@
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 
-// #include <vtkWindowLevelLookupTable.h> // ---> error !
-// #include <vtkDataSetMapper.h> // ---> error !
-// #include <vtkActor.h> // ---> error !
-// #include <vtkCamera.h> // ---> error !
-// #include <vtkRenderWindow.h> // ---> error !
-// #include <vtkRenderer.h> // ---> error !
-// #include <vtkRenderWindowInteractor.h> // ---> error !
+#ifdef DYNAMIC_VMTK
+  #include <vtkWindowLevelLookupTable.h> 
+  #include <vtkDataSetMapper.h> 
+  #include <vtkPolyDataMapper.h> 
+  #include <vtkActor.h> 
+  #include <vtkCamera.h> 
+  #include <vtkRenderWindow.h> 
+  #include <vtkRenderer.h> 
+  #include <vtkRenderWindowInteractor.h> 
+
+  #include "render.h"
+#endif
 
 // custom libs
 #include "stack.h"
-// #include "render.h"
-// #include "test.h"
+#include "test.h"
 
-// std::vector<int> compute_cmpr (std::string volumeFileName, std::string polyDataFileName, unsigned int resolution, double dx, double dy, double dz, double distance)
-std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> seeds, unsigned int resolution, std::vector<int> dir, double distance, std::vector<float> stack_direction, float dist_slices, int n_slices, bool render)
+
+// TODO 
+// - project spline on volume bound plane using extrusion direction negated DONE
+// - create stack in both direction DONE
+// - return metadata DONE
+// - set ifdef for linking static vmtk DONE
+// - create pseudo axial stack (slices along spline) DONE
+// - render source spline for debug DONE
+// - return stack dimensions DONE
+
+std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileName, 
+                                                        std::vector<float> seeds, 
+                                                        unsigned int resolution, 
+                                                        std::vector<int> dir, 
+                                                        std::vector<float> stack_direction, 
+                                                        float dist_slices, 
+                                                        int n_slices, 
+                                                        bool render)
 {
   time_t time_0;
   time(&time_0);
 
-  // Parse input
+  // Parse input 
   double direction[3];
   std::copy(dir.begin(), dir.end(), direction);
 
@@ -56,11 +80,37 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   reader->SetFileName(volumeFileName.c_str());
   reader->Update();
 
-  GetMetadata(reader->GetOutput()); // TODO return to python in someway
+  std::vector<float> metadata = GetMetadata(reader->GetOutput()); // TODO return to python in someway
+
+  double origin[3] = {
+    metadata[0],
+    metadata[1],
+    metadata[2],
+  };
+  double neg_direction[3] = {
+    -direction[0],
+    -direction[1],
+    -direction[2]
+  };
 
   // Create a spline from input seeds
   vtkSmartPointer<vtkPolyData> spline = vtkSmartPointer<vtkPolyData>::New();
-  spline = CreateSpline(seeds, resolution);
+  spline = CreateSpline(seeds, resolution, origin, neg_direction, true);
+
+  // Compute sweep distance
+  double distance;
+  // TODO get max direction
+  if (direction[0] == 1.0){
+    distance = metadata[7] - metadata[6];
+  }
+  else if (direction[1] == 1.0){
+    distance = metadata[9] - metadata[8];
+  }
+  else if (direction[2] == 1.0){
+    distance = metadata[11] - metadata[10];
+  }
+
+  std::cout << "DISTANCE " << distance << std::endl;
 
   // Sweep the line to form a surface
   vtkSmartPointer<vtkPolyData> master_slice = SweepLine(spline, direction, distance, resolution);
@@ -71,20 +121,31 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
   // Squash stack map into a single polydata
   vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map);
 
-  for (int i = 0; i < stack_map.size(); i++)
-  {
-    // std::cout << i << " stack: " << stack_map[i]->GetNumberOfPoints() << std::endl;
-  }
+  // Compute axial stack
+  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(spline, 413);
 
+  // Squash stack map into a single polydata
+  vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map);
+
+  // for (int i = 0; i < stack_map.size(); i++) 
+  // {
+  //    std::cout << i << " stack: " << stack_map[i]->GetNumberOfPoints() << std::endl;
+  // }
+ 
   std::cout << "complete_stack number of points: " << complete_stack->GetNumberOfPoints() << std::endl;
-
-  // Probe the volume with the extruded surface
+ 
+  // Probe the volume with the extruded surfaces
   vtkSmartPointer<vtkProbeFilter> sampleVolume = vtkSmartPointer<vtkProbeFilter>::New();
   sampleVolume->SetInputConnection(1, reader->GetOutputPort());
   sampleVolume->SetInputData(0, complete_stack);
   sampleVolume->Update();
 
-  // Test
+  vtkSmartPointer<vtkProbeFilter> sampleVolumeAxial = vtkSmartPointer<vtkProbeFilter>::New();
+  sampleVolumeAxial->SetInputConnection(1, reader->GetOutputPort());
+  sampleVolumeAxial->SetInputData(0, complete_axial_stack);
+  sampleVolumeAxial->Update();
+
+  // Test 
   // bool response = test_alg(viewPlane, sampleVolume->GetOutput());
   // if (response) std::cout << "test passed" << std::endl;
   // else std::cout << "test failed" << std::endl;
@@ -94,16 +155,35 @@ std::vector<int> compute_cmpr(std::string volumeFileName, std::vector<float> see
 
   std::cout << "Total : " << difftime(time_1, time_0) << "[s]" << std::endl;
 
+#ifdef DYNAMIC_VMTK
   // Render
-  // if (render)
-  // {
-  //   int res = renderAll(sampleVolume, reader->GetOutput(), resolution);
-  // }
+  if (render)
+  {
+    // Render source spline
+    vtkSmartPointer<vtkPolyData> original_spline = vtkSmartPointer<vtkPolyData>::New();
+    original_spline = CreateSpline(seeds, resolution, origin, neg_direction, false);
+
+    int res = renderAll(original_spline, sampleVolumeAxial, reader->GetOutput(), resolution);
+  }
+#endif
 
   // Get values from probe output
-  std::vector<int> values = GetPixelValues(sampleVolume->GetOutput());
+  std::vector<float> values_cmpr = GetPixelValues(sampleVolume->GetOutput());
+  std::vector<float> values_axial = GetPixelValues(sampleVolumeAxial->GetOutput());
 
-  return values;
+  std::map<std::string, std::vector<float>> response;
+
+  // TODO return these values:
+  std::vector<float> dimension_cmpr = GetDimensions(stack_map);
+  std::vector<float> dimension_axial = GetDimensions(axial_stack_map);
+
+  response["metadata"] = metadata;
+  response["pixels_cmpr"] = values_cmpr;
+  response["pixels_axial"] = values_axial;
+  response["dimension_cmpr"] = dimension_cmpr;
+  response["dimension_axial"] = dimension_axial;
+
+  return response;
 }
 
 int main(int argc, char *argv[])
@@ -126,7 +206,7 @@ int main(int argc, char *argv[])
   }
 
   // Parse arguments
-  std::string volumeFileName = argv[1];
+  std::string volumeFileName = argv[1]; 
   std::string polyDataFileName = argv[2];
   unsigned int resolution;
 

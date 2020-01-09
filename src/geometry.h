@@ -1,14 +1,33 @@
 
 // Create a spline from an array of xyz points
-vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resolution)
+vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resolution, double origin[3], double normal[3], bool project)
 {
-  // Create a vtkPoints object and store the points in it
+  // Create a vtkPoints object and store the points in it, projecting them on the boundary plane
   vtkSmartPointer<vtkPoints> points =
     vtkSmartPointer<vtkPoints>::New();
 
+  vtkSmartPointer<vtkPlane> plane = 
+      vtkSmartPointer<vtkPlane>::New();
+  plane->SetOrigin(origin);
+  plane->SetNormal(normal);
+  
+  double p[3];
+  double projected[3];  
+
   for ( auto i = seeds.begin(); i != seeds.end(); i+=3 ) {
-    std::cout << *i << " " << *(i+1) << " " << *(i+2) << std::endl;
-    points->InsertNextPoint(*i, *(i+1), *(i+2));
+    // std::cout << *i << " " << *(i+1) << " " << *(i+2) << std::endl;
+    p[0]= *i;
+    p[1]= *(i+1);
+    p[2]= *(i+2);
+    if (project)
+    {
+      plane->ProjectPoint(p, origin, normal, projected);
+      points->InsertNextPoint(projected);
+    }
+    else 
+    {
+      points->InsertNextPoint(p);
+    }
   } 
 
   vtkSmartPointer<vtkPolyLine> polyLine =
@@ -116,4 +135,22 @@ vtkSmartPointer<vtkPolyData> ShiftMasterSlice(vtkPolyData *original_surface, int
   transformFilter->Update();
 
   return transformFilter->GetOutput();
+}
+
+vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3], int resolution)
+{
+
+  origin[0] += 200.0; // FIXME why this ??
+
+  vtkSmartPointer<vtkPlaneSource> targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
+  targetPlane->SetOrigin(0.0, 0.0, 0.0);
+  targetPlane->SetPoint1(413.0, 0.0, 0.0);
+  targetPlane->SetPoint2(0.0, 413.0, 0.0);
+  targetPlane->SetNormal(normal);
+  targetPlane->SetCenter(origin);
+  targetPlane->SetXResolution(resolution); 
+  targetPlane->SetYResolution(resolution);
+  targetPlane->Update();
+
+  return targetPlane->GetOutput();
 }
