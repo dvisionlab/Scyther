@@ -1,5 +1,5 @@
 // comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-#define DYNAMIC_VMTK
+// #define DYNAMIC_VMTK
 
 // std libs
 #include <vector>
@@ -119,13 +119,13 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   std::map<int, vtkSmartPointer<vtkPolyData>> stack_map = CreateStack(master_slice, n_slices, stack_direction, dist_slices);
 
   // Squash stack map into a single polydata
-  vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map);
+  vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map, false);
 
   // Compute axial stack
-  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(spline, 413);
+  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(spline, resolution);
 
   // Squash stack map into a single polydata
-  vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map);
+  vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map, false);
 
   // for (int i = 0; i < stack_map.size(); i++) 
   // {
@@ -168,8 +168,8 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 #endif
 
   // Get values from probe output
-  std::vector<float> values_cmpr = GetPixelValues(sampleVolume->GetOutput());
-  std::vector<float> values_axial = GetPixelValues(sampleVolumeAxial->GetOutput());
+  std::vector<float> values_cmpr = GetPixelValues(sampleVolume->GetOutput(), false);
+  std::vector<float> values_axial = GetPixelValues(sampleVolumeAxial->GetOutput(), true);
 
   std::map<std::string, std::vector<float>> response;
 
