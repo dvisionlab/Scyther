@@ -36,14 +36,15 @@
   #include <vtkRenderWindow.h> 
   #include <vtkRenderer.h> 
   #include <vtkRenderWindowInteractor.h> 
-
-  #include "render.h"
 #endif
 
 // custom libs
 #include "stack.h"
 #include "test.h"
 
+#ifdef DYNAMIC_VMTK
+  #include "render.h"
+#endif
 
 // TODO 
 // - project spline on volume bound plane using extrusion direction negated DONE
@@ -80,7 +81,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   reader->SetFileName(volumeFileName.c_str());
   reader->Update();
 
-  std::vector<float> metadata = GetMetadata(reader->GetOutput()); // TODO return to python in someway
+  std::vector<float> metadata = GetMetadata(reader->GetOutput()); 
 
   double origin[3] = {
     metadata[0],
@@ -110,7 +111,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
     distance = metadata[11] - metadata[10];
   }
 
-  std::cout << "DISTANCE " << distance << std::endl;
+  std::cout << "distance " << distance << std::endl;
 
   // Sweep the line to form a surface
   vtkSmartPointer<vtkPolyData> master_slice = SweepLine(spline, direction, distance, resolution);
@@ -173,15 +174,39 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 
   std::map<std::string, std::vector<float>> response;
 
-  // TODO return these values:
+  // Compute mean distance btw points to be returned as image spacing 
+  float mean_pts_distance = GetMeanDistanceBtwPoints(spline);
+  float range = GetWindowWidth(reader->GetOutput());
+
+  // Compose response with metadata
   std::vector<float> dimension_cmpr = GetDimensions(stack_map);
   std::vector<float> dimension_axial = GetDimensions(axial_stack_map);
+  std::vector<float> spacing_cmpr = {
+    float(distance / resolution),
+    mean_pts_distance
+  };
+  std::vector<float> spacing_axial = {
+    1.0,
+    1.0
+  };
+  std::vector<float> wwwl_cmpr = {
+    range,
+    range / 2
+  };
+  std::vector<float> wwwl_axial = {
+    range,
+    range / 2
+  };
 
   response["metadata"] = metadata;
   response["pixels_cmpr"] = values_cmpr;
   response["pixels_axial"] = values_axial;
   response["dimension_cmpr"] = dimension_cmpr;
   response["dimension_axial"] = dimension_axial;
+  response["spacing_cmpr"] = spacing_cmpr;
+  response["spacing_axial"] = spacing_axial;
+  response["wwwl_cmpr"] = wwwl_cmpr;
+  response["wwwl_axial"] = wwwl_axial;
 
   return response;
 }

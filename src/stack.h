@@ -160,3 +160,8 @@ std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> sta
   return dimensions;
 }
 
+float GetWindowWidth(vtkSmartPointer<vtkImageData> image)
+{
+  float range = image->GetScalarRange()[1] - image->GetScalarRange()[0];
+  return range;
+}
