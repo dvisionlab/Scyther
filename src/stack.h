@@ -20,7 +20,7 @@ std::vector<float> GetMetadata(vtkImageData *image)
             << image->GetBounds()[3] << ", " << image->GetBounds()[4] << ", " << image->GetBounds()[5] << std::endl;
 
   std::vector<float> metadata;
-  
+
   metadata.push_back(image->GetOrigin()[0]);
   metadata.push_back(image->GetOrigin()[1]);
   metadata.push_back(image->GetOrigin()[2]);
@@ -47,9 +47,9 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slic
   vtkMath::MultiplyScalar(direction.data(), dist_slices);
   int slice_id = 0;
 
-  for (int s = -n_slices/2; s < n_slices/2; s++)
+  for (int s = -n_slices / 2; s < n_slices / 2; s++)
   {
-    slice_id = s + n_slices/2;
+    slice_id = s + n_slices / 2;
     stack[slice_id] = ShiftMasterSlice(master_slice, s, direction);
   }
 
@@ -61,7 +61,7 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slic
   return stack;
 }
 
-std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, int resolution)
+std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, float side_length, int resolution)
 {
   std::map<int, vtkSmartPointer<vtkPolyData>> stack;
 
@@ -70,19 +70,19 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline
   double p0[3];
   double p1[3];
   double n[3];
-  
-  for (int frame=0; frame<spline->GetNumberOfPoints()-1; frame++)
+
+  for (int frame = 0; frame < spline->GetNumberOfPoints() - 1; frame++)
+  // for (int frame = 0; frame < spline->GetNumberOfPoints() - 1; frame += 10)
   {
     spline->GetPoint(frame, p0);
-    spline->GetPoint(frame+1, p1);
+    spline->GetPoint(frame + 1, p1);
 
-    
-    n[0] = p1[0]-p0[0];
-    n[1] = p1[1]-p0[1];
-    n[2] = p1[2]-p0[2];
-    
-    targetPlane = GetOrientedPlane(p0, n, resolution);    
-    stack[frame] = targetPlane; 
+    n[0] = p1[0] - p0[0];
+    n[1] = p1[1] - p0[1];
+    n[2] = p1[2] - p0[2];
+
+    targetPlane = GetOrientedPlane(p0, n, side_length, resolution);
+    stack[frame] = targetPlane;
   }
 
   return stack;
@@ -106,7 +106,7 @@ vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> 
       appendFilter->AddInputData(stack_map[p]);
     }
   }
-  else 
+  else
   {
     for (int q = 0; q < stack_map.size(); q++)
     {
@@ -152,7 +152,7 @@ std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> sta
 {
   std::vector<float> dimensions;
 
-  float plane_edge = floor(sqrt(stack[0]->GetNumberOfPoints())); 
+  float plane_edge = floor(sqrt(stack[0]->GetNumberOfPoints()));
   dimensions.push_back(plane_edge);
   dimensions.push_back(plane_edge);
   dimensions.push_back(stack.size());

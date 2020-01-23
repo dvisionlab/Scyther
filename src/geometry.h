@@ -4,48 +4,49 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
 {
   // Create a vtkPoints object and store the points in it, projecting them on the boundary plane
   vtkSmartPointer<vtkPoints> points =
-    vtkSmartPointer<vtkPoints>::New();
+      vtkSmartPointer<vtkPoints>::New();
 
-  vtkSmartPointer<vtkPlane> plane = 
+  vtkSmartPointer<vtkPlane> plane =
       vtkSmartPointer<vtkPlane>::New();
   plane->SetOrigin(origin);
   plane->SetNormal(normal);
-  
-  double p[3];
-  double projected[3];  
 
-  for ( auto i = seeds.begin(); i != seeds.end(); i+=3 ) {
+  double p[3];
+  double projected[3];
+
+  for (auto i = seeds.begin(); i != seeds.end(); i += 3)
+  {
     // std::cout << *i << " " << *(i+1) << " " << *(i+2) << std::endl;
-    p[0]= *i;
-    p[1]= *(i+1);
-    p[2]= *(i+2);
+    p[0] = *i;
+    p[1] = *(i + 1);
+    p[2] = *(i + 2);
     if (project)
     {
       plane->ProjectPoint(p, origin, normal, projected);
       points->InsertNextPoint(projected);
     }
-    else 
+    else
     {
       points->InsertNextPoint(p);
     }
-  } 
+  }
 
   vtkSmartPointer<vtkPolyLine> polyLine =
-    vtkSmartPointer<vtkPolyLine>::New();
-  polyLine->GetPointIds()->SetNumberOfIds(seeds.size()/3);
-  for(unsigned int i = 0; i < seeds.size()/3; i++)
+      vtkSmartPointer<vtkPolyLine>::New();
+  polyLine->GetPointIds()->SetNumberOfIds(seeds.size() / 3);
+  for (unsigned int i = 0; i < seeds.size() / 3; i++)
   {
-    polyLine->GetPointIds()->SetId(i,i);
+    polyLine->GetPointIds()->SetId(i, i);
   }
 
   // Create a cell array to store the lines in and add the lines to it
   vtkSmartPointer<vtkCellArray> cells =
-    vtkSmartPointer<vtkCellArray>::New();
+      vtkSmartPointer<vtkCellArray>::New();
   cells->InsertNextCell(polyLine);
 
   // Create a polydata to store everything in
   vtkSmartPointer<vtkPolyData> polyData =
-    vtkSmartPointer<vtkPolyData>::New();
+      vtkSmartPointer<vtkPolyData>::New();
 
   // Add the points to the dataset
   polyData->SetPoints(points);
@@ -57,7 +58,7 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
   vtkSmartPointer<vtkSplineFilter> spline = vtkSmartPointer<vtkSplineFilter>::New();
   spline->SetInputData(polyData);
   spline->SetSubdivideToSpecified();
-  spline->SetNumberOfSubdivisions(resolution-1); // n subdivisions = n+1 points
+  spline->SetNumberOfSubdivisions(resolution - 1); // n subdivisions = n+1 points
   spline->Update();
 
   return spline->GetOutput();
@@ -69,7 +70,7 @@ vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, double direction[3], d
   unsigned int rows = line->GetNumberOfPoints();
   double spacing = distance / cols;
 
-  std::cout << "rows, cols: " << rows << ", " << cols << std::endl; 
+  std::cout << "rows, cols: " << rows << ", " << cols << std::endl;
 
   vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
 
@@ -137,18 +138,17 @@ vtkSmartPointer<vtkPolyData> ShiftMasterSlice(vtkPolyData *original_surface, int
   return transformFilter->GetOutput();
 }
 
-vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3], int resolution)
+vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3], float side_length, int resolution)
 {
 
-  origin[0] += 200.0; // FIXME why this ??
-
-  vtkSmartPointer<vtkPlaneSource> targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
+  vtkSmartPointer<vtkPlaneSource>
+      targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
   targetPlane->SetOrigin(0.0, 0.0, 0.0);
-  targetPlane->SetPoint1(413.0, 0.0, 0.0);
-  targetPlane->SetPoint2(0.0, 413.0, 0.0);
+  targetPlane->SetPoint1(side_length, 0.0, 0.0);
+  targetPlane->SetPoint2(0.0, side_length, 0.0);
   targetPlane->SetNormal(normal);
   targetPlane->SetCenter(origin);
-  targetPlane->SetXResolution(resolution); 
+  targetPlane->SetXResolution(resolution);
   targetPlane->SetYResolution(resolution);
   targetPlane->Update();
 
@@ -160,13 +160,13 @@ double GetMeanDistanceBtwPoints(vtkSmartPointer<vtkPolyData> spline)
   double p1[3];
   double p2[3];
   double sum = 0;
-  int numberOfSegments = spline->GetNumberOfPoints()-1;
+  int numberOfSegments = spline->GetNumberOfPoints() - 1;
 
-  for (int i = 0; i < numberOfSegments; i++) 
+  for (int i = 0; i < numberOfSegments; i++)
   {
     spline->GetPoint(i, p1);
-    spline->GetPoint(i+1, p2);
-    sum += sqrt(vtkMath::Distance2BetweenPoints(p1,p2));
+    spline->GetPoint(i + 1, p2);
+    sum += sqrt(vtkMath::Distance2BetweenPoints(p1, p2));
   }
 
   return sum / double(numberOfSegments);
