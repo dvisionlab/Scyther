@@ -13,7 +13,9 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
 
   double p[3];
   double projected[3];
+  int n = 0;
 
+  // create point list from seeds (project onto the bb plane if requested)
   for (auto i = seeds.begin(); i != seeds.end(); i += 3)
   {
     // std::cout << *i << " " << *(i+1) << " " << *(i+2) << std::endl;
@@ -24,6 +26,7 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
     {
       plane->ProjectPoint(p, origin, normal, projected);
       points->InsertNextPoint(projected);
+      n++;
     }
     else
     {
@@ -31,6 +34,7 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
     }
   }
 
+  // Init a polyline
   vtkSmartPointer<vtkPolyLine> polyLine =
       vtkSmartPointer<vtkPolyLine>::New();
   polyLine->GetPointIds()->SetNumberOfIds(seeds.size() / 3);
@@ -138,19 +142,86 @@ vtkSmartPointer<vtkPolyData> ShiftMasterSlice(vtkPolyData *original_surface, int
   return transformFilter->GetOutput();
 }
 
-vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3], float side_length, int resolution)
+void GetIOPIPP(vtkSmartPointer<vtkPlaneSource> slice, double iop[6], double ipp[3])
 {
+  double p0[3], p1[3], p2[3], v01[3], v02[3];
+
+  slice->GetOrigin(ipp);
+  slice->GetPoint1(p1);
+  slice->GetPoint2(p2);
+
+  // std::cout << slice->GetOrigin()[0] << ", "
+  //           << slice->GetOrigin()[1] << ", "
+  //           << slice->GetOrigin()[2] << std::endl;
+  // std::cout << slice->GetPoint1()[0] << ", "
+  //           << slice->GetPoint1()[1] << ", "
+  //           << slice->GetPoint1()[2] << std::endl;
+  // std::cout << slice->GetPoint2()[0] << ", "
+  //           << slice->GetPoint2()[1] << ", "
+  //           << slice->GetPoint2()[2] << std::endl;
+
+  vtkMath::Subtract(p1, ipp, v01);
+  vtkMath::Normalize(v01);
+  vtkMath::Subtract(p2, ipp, v02);
+  vtkMath::Normalize(v02);
+
+  // std::cout << v01[0] << ", "
+  //           << v01[1] << ", "
+  //           << v01[2] << std::endl;
+
+  // std::cout << v02[0] << ", "
+  //           << v02[1] << ", "
+  //           << v02[2] << std::endl;
+
+  // std::cout << " --- " << std::endl;
+
+  iop[0] = v01[0];
+  iop[1] = v01[1];
+  iop[2] = v01[2];
+  iop[3] = v02[0];
+  iop[4] = v02[1];
+  iop[5] = v02[2];
+
+  return;
+}
+
+vtkSmartPointer<vtkPolyData> GetOrientedPlane(double origin[3], double normal[3], float side_length, int resolution, std::vector<float> &iop_axial, std::vector<float> &ipp_axial)
+{
+
+  double normal_z[3] = {0, 0, normal[2]};
+  vtkMath::Normalize(normal_z);
+  double normal_yz[3] = {0, normal[1], normal[2]};
+  vtkMath::Normalize(normal_yz);
+  double normal_xyz[3] = {normal[0], normal[1], normal[2]};
+  vtkMath::Normalize(normal_xyz);
 
   vtkSmartPointer<vtkPlaneSource>
       targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
   targetPlane->SetOrigin(0.0, 0.0, 0.0);
   targetPlane->SetPoint1(side_length, 0.0, 0.0);
   targetPlane->SetPoint2(0.0, side_length, 0.0);
-  targetPlane->SetNormal(normal);
+  targetPlane->SetNormal(normal_z);
+  targetPlane->SetNormal(normal_yz);
+  targetPlane->SetNormal(normal_xyz);
   targetPlane->SetCenter(origin);
   targetPlane->SetXResolution(resolution);
   targetPlane->SetYResolution(resolution);
   targetPlane->Update();
+
+  double iop[6];
+  double ipp[3];
+  GetIOPIPP(targetPlane, iop, ipp);
+
+  iop_axial.push_back(iop[0]);
+  iop_axial.push_back(iop[1]);
+  iop_axial.push_back(iop[2]);
+  iop_axial.push_back(iop[3]);
+  iop_axial.push_back(iop[4]);
+  iop_axial.push_back(iop[5]);
+
+  ipp_axial.push_back(ipp[0]);
+  ipp_axial.push_back(ipp[1]);
+  ipp_axial.push_back(ipp[2]);
 
   return targetPlane->GetOutput();
 }
