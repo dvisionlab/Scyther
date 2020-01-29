@@ -1,5 +1,5 @@
 // comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-// #define DYNAMIC_VMTK
+#define DYNAMIC_VMTK
 
 // std libs
 #include <vector>
@@ -54,6 +54,7 @@
 // - create pseudo axial stack (slices along spline) DONE
 // - render source spline for debug DONE
 // - return stack dimensions DONE
+// - return the list of the keys present in the response, in order to avoid python remaining stuck trying to read something that doesn't exist
 
 std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileName,
                                                        std::vector<float> seeds,
@@ -185,7 +186,10 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   float range = GetWindowWidth(reader->GetOutput());
 
   // Compose response with metadata
-  std::vector<float> dimension_cmpr = GetDimensions(stack_map);
+  std::vector<float> dimension_cmpr = {
+      float(seeds.size() / 3),
+      float(resolution),
+      GetDimensions(stack_map)[2]};
   std::vector<float>
       dimension_axial = GetDimensions(axial_stack_map);
   std::vector<float> spacing_cmpr = {
