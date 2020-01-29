@@ -185,12 +185,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   float range = GetWindowWidth(reader->GetOutput());
 
   // Compose response with metadata
-  // std::vector<float> dimension_cmpr = GetDimensions(stack_map); // DEV
-
-  std::vector<float> dimension_cmpr = {
-      float(seeds.size() / 3),
-      float(resolution)};
-
+  std::vector<float> dimension_cmpr = GetDimensions(stack_map);
   std::vector<float>
       dimension_axial = GetDimensions(axial_stack_map);
   std::vector<float> spacing_cmpr = {

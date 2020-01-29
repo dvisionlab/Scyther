@@ -34,8 +34,6 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
     }
   }
 
-  std::cout << "proj pts: " << n << std::endl;
-
   // Init a polyline
   vtkSmartPointer<vtkPolyLine> polyLine =
       vtkSmartPointer<vtkPolyLine>::New();
@@ -60,16 +58,14 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
   // Add the lines to the dataset
   polyData->SetLines(cells);
 
-  return polyData;
-
   // Sample polyline to spline
-  // vtkSmartPointer<vtkSplineFilter> spline = vtkSmartPointer<vtkSplineFilter>::New();
-  // spline->SetInputData(polyData);
-  // spline->SetSubdivideToSpecified();
-  // spline->SetNumberOfSubdivisions(resolution - 1); // n subdivisions = n+1 points
-  // spline->Update();
+  vtkSmartPointer<vtkSplineFilter> spline = vtkSmartPointer<vtkSplineFilter>::New();
+  spline->SetInputData(polyData);
+  spline->SetSubdivideToSpecified();
+  spline->SetNumberOfSubdivisions(resolution - 1); // n subdivisions = n+1 points
+  spline->Update();
 
-  // return spline->GetOutput();
+  return spline->GetOutput();
 }
 
 // Extrude a spline to create a curved plane
