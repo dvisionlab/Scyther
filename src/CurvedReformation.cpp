@@ -1,5 +1,5 @@
 // comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-// #define DYNAMIC_VMTK
+#define DYNAMIC_VMTK
 
 // std libs
 #include <vector>
@@ -73,7 +73,8 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 
   // Print arguments
   std::cout << "InputVolume: " << volumeFileName << std::endl
-            << "Resolution: " << resolution << std::endl;
+            << "Resolution: " << resolution << std::endl
+            << "Seeds: " << seeds.size() << std::endl;
 
   // Read the volume data
   vtkSmartPointer<vtkNrrdReader> reader = vtkSmartPointer<vtkNrrdReader>::New();
@@ -129,7 +130,9 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
 
   // Compute axial stack
   float axial_side_length = 120.0;
-  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(original_spline, axial_side_length, resolution);
+  std::vector<float> iop_axial;
+  std::vector<float> ipp_axial;
+  std::map<int, vtkSmartPointer<vtkPolyData>> axial_stack_map = CreateAxialStack(original_spline, axial_side_length, resolution, iop_axial, ipp_axial);
 
   // Squash stack map into a single polydata
   vtkSmartPointer<vtkPolyData> complete_axial_stack = Squash(axial_stack_map, false);
@@ -139,7 +142,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   //    std::cout << i << " stack: " << stack_map[i]->GetNumberOfPoints() << std::endl;
   // }
 
-  std::cout << "complete_stack number of points: " << complete_stack->GetNumberOfPoints() << std::endl;
+  // std::cout << "complete_stack number of points: " << complete_stack->GetNumberOfPoints() << std::endl;
 
   // Probe the volume with the extruded surfaces
   vtkSmartPointer<vtkProbeFilter> sampleVolume = vtkSmartPointer<vtkProbeFilter>::New();
@@ -166,8 +169,8 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   // Render
   if (render)
   {
-    int res = renderAll(original_spline, sampleVolumeAxial, reader->GetOutput(), resolution);
-    // int res = renderAll(original_spline, sampleVolume, reader->GetOutput(), resolution);
+    // int res = renderAll(original_spline, sampleVolumeAxial, reader->GetOutput(), resolution);
+    int res = renderAll(original_spline, sampleVolume, reader->GetOutput(), resolution);
   }
 #endif
 
@@ -182,8 +185,14 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   float range = GetWindowWidth(reader->GetOutput());
 
   // Compose response with metadata
-  std::vector<float> dimension_cmpr = GetDimensions(stack_map);
-  std::vector<float> dimension_axial = GetDimensions(axial_stack_map);
+  // std::vector<float> dimension_cmpr = GetDimensions(stack_map); // DEV
+
+  std::vector<float> dimension_cmpr = {
+      float(seeds.size() / 3),
+      float(resolution)};
+
+  std::vector<float>
+      dimension_axial = GetDimensions(axial_stack_map);
   std::vector<float> spacing_cmpr = {
       float(distance / resolution),
       mean_pts_distance};
@@ -206,6 +215,8 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   response["spacing_axial"] = spacing_axial;
   response["wwwl_cmpr"] = wwwl_cmpr;
   response["wwwl_axial"] = wwwl_axial;
+  response["iop_axial"] = iop_axial;
+  response["ipp_axial"] = ipp_axial;
 
   return response;
 }

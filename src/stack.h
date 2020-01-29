@@ -56,12 +56,12 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slic
   time_t time_1;
   time(&time_1);
 
-  std::cout << "CreateStack tooks : " << difftime(time_1, time_0) << " [s]" << std::endl;
+  // std::cout << "CreateStack tooks : " << difftime(time_1, time_0) << " [s]" << std::endl;
 
   return stack;
 }
 
-std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, float side_length, int resolution)
+std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, float side_length, int resolution, std::vector<float> &iop_axial, std::vector<float> &ipp_axial)
 {
   std::map<int, vtkSmartPointer<vtkPolyData>> stack;
 
@@ -72,7 +72,7 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline
   double n[3];
 
   for (int frame = 0; frame < spline->GetNumberOfPoints() - 1; frame++)
-  // for (int frame = 0; frame < spline->GetNumberOfPoints() - 1; frame += 10)
+  // for (int frame = 0; frame < spline->GetNumberOfPoints() - 1; frame += 20) //DEV
   {
     spline->GetPoint(frame, p0);
     spline->GetPoint(frame + 1, p1);
@@ -81,7 +81,7 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline
     n[1] = p1[1] - p0[1];
     n[2] = p1[2] - p0[2];
 
-    targetPlane = GetOrientedPlane(p0, n, side_length, resolution);
+    targetPlane = GetOrientedPlane(p0, n, side_length, resolution, iop_axial, ipp_axial);
     stack[frame] = targetPlane;
   }
 
@@ -119,7 +119,7 @@ vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> 
   time_t time_1;
   time(&time_1);
 
-  std::cout << "Squash tooks : " << difftime(time_1, time_0) << " [s]" << std::endl;
+  // std::cout << "Squash tooks : " << difftime(time_1, time_0) << " [s]" << std::endl;
 
   return appendFilter->GetOutput();
 }
@@ -151,7 +151,7 @@ std::vector<float> GetPixelValues(vtkDataSet *dataset, bool reverse)
 std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> stack)
 {
   std::vector<float> dimensions;
-
+  // Assume squared slice
   float plane_edge = floor(sqrt(stack[0]->GetNumberOfPoints()));
   dimensions.push_back(plane_edge);
   dimensions.push_back(plane_edge);
