@@ -47,6 +47,12 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slic
   vtkMath::MultiplyScalar(direction.data(), dist_slices);
   int slice_id = 0;
 
+  if (n_slices == 1)
+  {
+    stack[0] = master_slice;
+    return stack;
+  }
+
   for (int s = -n_slices / 2; s < n_slices / 2; s++)
   {
     slice_id = s + n_slices / 2;

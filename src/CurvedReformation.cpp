@@ -1,5 +1,5 @@
 // comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-// #define DYNAMIC_VMTK
+#define DYNAMIC_VMTK
 
 // std libs
 #include <vector>
@@ -26,6 +26,9 @@
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
+#include <vtkSmoothPolyDataFilter.h>
+#include <vtkTriangleFilter.h>
+#include <vtkvmtkPolyDataKiteRemovalFilter.h>
 
 #ifdef DYNAMIC_VMTK
 #include <vtkWindowLevelLookupTable.h>
@@ -58,6 +61,8 @@
 
 std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileName,
                                                        std::vector<float> seeds,
+                                                       std::vector<float> tng,
+                                                       std::vector<float> ptn,
                                                        unsigned int resolution,
                                                        std::vector<int> dir,
                                                        std::vector<float> stack_direction,
@@ -75,7 +80,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   // Print arguments
   std::cout << "InputVolume: " << volumeFileName << std::endl
             << "Resolution: " << resolution << std::endl
-            << "Seeds: " << seeds.size() << std::endl;
+            << "Seeds: " << seeds.size() / 3 << std::endl;
 
   // Read the volume data
   vtkSmartPointer<vtkNrrdReader> reader = vtkSmartPointer<vtkNrrdReader>::New();
@@ -121,7 +126,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   std::cout << "sweep distance " << distance << std::endl;
 
   // Sweep the line to form a surface
-  vtkSmartPointer<vtkPolyData> master_slice = SweepLine(spline, direction, distance, resolution);
+  vtkSmartPointer<vtkPolyData> master_slice = SweepLine(original_spline, ptn, distance, 5);
 
   // Shift the master slice to create a stack
   std::map<int, vtkSmartPointer<vtkPolyData>> stack_map = CreateStack(master_slice, n_slices, stack_direction, dist_slices);
@@ -182,7 +187,7 @@ std::map<std::string, std::vector<float>> compute_cmpr(std::string volumeFileNam
   std::map<std::string, std::vector<float>> response;
 
   // Compute mean distance btw points to be returned as image spacing
-  float mean_pts_distance = GetMeanDistanceBtwPoints(spline);
+  float mean_pts_distance = 1.0; // GetMeanDistanceBtwPoints(spline);
   float range = GetWindowWidth(reader->GetOutput());
 
   // Compose response with metadata
