@@ -1,12 +1,4 @@
-#include <time.h>
 
-#include <vtkSmartPointer.h>
-#include <vtkPoints.h>
-#include <vtkCellArray.h>
-#include <vtkPolyData.h>
-#include <vtkPolyLine.h>
-
-#include "geometry.h"
 
 std::vector<float> GetMetadata(vtkImageData *image)
 {
