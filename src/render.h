@@ -1,14 +1,18 @@
 
 // Paint pixels on a plane
-vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, int resolution)
+vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, vtkPolyData *spline, float slice_dimension)
 {
+  float dist = GetMeanDistanceBtwPoints(spline);
+  int nop = spline->GetNumberOfPoints();
+
+  std::cout << "plane edges " << pixels->GetNumberOfValues() / nop << ", " << dist * nop << std::endl;
 
   vtkSmartPointer<vtkPlaneSource> targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
-  targetPlane->SetOrigin(200.0, 0.0, 0.0);
-  targetPlane->SetPoint1(520.0, 0.0, 0.0);
-  targetPlane->SetPoint2(200.0, 0.0, 320.0);
-  targetPlane->SetXResolution(resolution - 1); // this -1 matches with cols++
-  targetPlane->SetYResolution(resolution);
+  targetPlane->SetOrigin(0.0, 0.0, 0.0);
+  targetPlane->SetPoint1(0.0, slice_dimension, 0.0);
+  targetPlane->SetPoint2(0.0, 0.0, dist * nop);
+  targetPlane->SetXResolution(pixels->GetNumberOfValues() / nop - 1); // this -1 matches with cols++
+  targetPlane->SetYResolution(nop);
   targetPlane->Update();
 
   vtkSmartPointer<vtkPolyData> viewPlane = vtkSmartPointer<vtkPolyData>::New();
@@ -19,13 +23,12 @@ vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, int resolution)
 }
 
 // Render curved & plane surfaces
-int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *image, int resolution)
+int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *image, float slice_dimension, float range)
 {
-  vtkSmartPointer<vtkPolyData> viewPlane = GetPlanar(sampleVolume->GetOutput()->GetPointData()->GetArray("ImageFile"), resolution);
+  vtkSmartPointer<vtkPolyData> viewPlane = GetPlanar(sampleVolume->GetOutput()->GetPointData()->GetArray("ImageFile"), spline, slice_dimension);
 
   // Compute a simple window/level based on scalar range
   vtkSmartPointer<vtkWindowLevelLookupTable> wlLut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-  double range = GetWindowWidth(image);
   double level = range / 2.0;
 
   wlLut->SetWindow(range);
@@ -57,6 +60,7 @@ int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *i
   vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
   vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
   renderWindow->AddRenderer(renderer);
+  renderWindow->SetSize(1600, 1600);
   vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renderWindowInteractor->SetRenderWindow(renderWindow);
 
@@ -67,9 +71,9 @@ int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *i
   renderer->SetBackground(.2, .3, .4);
 
   // Set the camera
-  renderer->GetActiveCamera()->SetViewUp(1, 0, 0);
-  renderer->GetActiveCamera()->SetPosition(0, -10, 0);
-  renderer->GetActiveCamera()->SetFocalPoint(0, 1, 0);
+  renderer->GetActiveCamera()->SetViewUp(0, 0, 1);
+  renderer->GetActiveCamera()->SetPosition(0, 100, 100);
+  renderer->GetActiveCamera()->SetFocalPoint(50, 50, 100);
   renderer->ResetCamera();
 
   // Render and interact

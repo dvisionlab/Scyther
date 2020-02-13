@@ -1,13 +1,3 @@
-#include <time.h>
-
-#include <vtkSmartPointer.h>
-#include <vtkPoints.h>
-#include <vtkCellArray.h>
-#include <vtkPolyData.h>
-#include <vtkPolyLine.h>
-
-#include "geometry.h"
-
 std::vector<float> GetMetadata(vtkImageData *image)
 {
   // Store the image and print some infos
@@ -46,6 +36,12 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slic
 
   vtkMath::MultiplyScalar(direction.data(), dist_slices);
   int slice_id = 0;
+
+  if (n_slices == 1)
+  {
+    stack[0] = master_slice;
+    return stack;
+  }
 
   for (int s = -n_slices / 2; s < n_slices / 2; s++)
   {
@@ -160,8 +156,23 @@ std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> sta
   return dimensions;
 }
 
-float GetWindowWidth(vtkSmartPointer<vtkImageData> image)
+// float GetWindowWidth(vtkSmartPointer<vtkImageData> image)
+float GetWindowWidth(std::vector<float> values, float max_, float min_)
 {
-  float range = image->GetScalarRange()[1] - image->GetScalarRange()[0];
-  return range;
+  float max = min_;
+  float min = max_;
+
+  for (int v = 0; v < values.size(); v++)
+  {
+    if (values[v] > max)
+    {
+      max = values[v];
+    }
+    if (values[v] < min)
+    {
+      min = values[v];
+    }
+  }
+
+  return max - min;
 }

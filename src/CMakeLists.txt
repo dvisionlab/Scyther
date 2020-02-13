@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 
 project(pyCmpr)
 
+# define prepcompiler flag
+add_compile_definitions(DYNAMIC_VMTK)
+
 # include vtk headers
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})

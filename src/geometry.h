@@ -71,7 +71,88 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
 }
 
 // Extrude a spline to create a curved plane
-vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, double direction[3], double distance, unsigned int cols)
+// vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, double direction[3], double distance, unsigned int cols)
+vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> directions, double distance, int cols)
+{
+  std::cout << distance << ", " << cols << std::endl;
+
+  unsigned int rows = line->GetNumberOfPoints();
+  double spacing = distance / cols;
+
+  std::cout
+      << "rows, cols: " << rows << ", " << cols << std::endl;
+
+  vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
+
+  // Generate the points
+  // cols++; TODO evaluate if necessary
+  unsigned int numberOfPoints = rows * cols;
+  unsigned int numberOfPolys = (rows - 1) * (cols - 1);
+  vtkSmartPointer<vtkPoints> points =
+      vtkSmartPointer<vtkPoints>::New();
+  points->Allocate(numberOfPoints);
+  vtkSmartPointer<vtkCellArray> polys =
+      vtkSmartPointer<vtkCellArray>::New();
+  polys->Allocate(numberOfPolys * 4);
+
+  double x[3], direction[3];
+  unsigned int cnt = 0;
+  for (unsigned int row = 0; row < rows; row++)
+  {
+    for (int col = -cols / 2; col < cols / 2; col++)
+    {
+      double p[3];
+      line->GetPoint(row, p);
+      direction[0] = directions[row * 3];
+      direction[1] = directions[row * 3 + 1];
+      direction[2] = directions[row * 3 + 2];
+      x[0] = p[0] + direction[0] * col * spacing;
+      x[1] = p[1] + direction[1] * col * spacing;
+      x[2] = p[2] + direction[2] * col * spacing;
+      points->InsertPoint(cnt++, x);
+    }
+  }
+  // Generate the quads
+  vtkIdType pts[4];
+  for (unsigned int row = 0; row < rows - 1; row++)
+  {
+    for (unsigned int col = 0; col < cols - 1; col++)
+    {
+      pts[0] = col + row * (cols);
+      pts[1] = pts[0] + 1;
+      pts[2] = pts[0] + cols + 1;
+      pts[3] = pts[0] + cols;
+      polys->InsertNextCell(4, pts);
+    }
+  }
+  surface->SetPoints(points);
+  surface->SetPolys(polys);
+
+  vtkSmartPointer<vtkTriangleFilter> triangleFilter =
+      vtkSmartPointer<vtkTriangleFilter>::New();
+  triangleFilter->SetInputData(surface);
+  triangleFilter->Update();
+
+  // TODO test with c++ interface (not pybind)
+  // vtkSmartPointer<vtkvmtkPolyDataKiteRemovalFilter> kiteRemovalFilter = vtkSmartPointer<vtkvmtkPolyDataKiteRemovalFilter>::New();
+  // kiteRemovalFilter->SetInputConnection(triangleFilter->GetOutputPort());
+  // kiteRemovalFilter->SetSizeFactor(2);
+  // kiteRemovalFilter->Update();
+
+  vtkSmartPointer<vtkSmoothPolyDataFilter> smoothFilter =
+      vtkSmartPointer<vtkSmoothPolyDataFilter>::New();
+  smoothFilter->SetInputData(triangleFilter->GetOutput());
+  smoothFilter->SetNumberOfIterations(1000); // opt param
+  smoothFilter->SetRelaxationFactor(0.1);    // opt param
+  smoothFilter->FeatureEdgeSmoothingOff();
+  smoothFilter->BoundarySmoothingOn();
+  smoothFilter->Update();
+
+  return smoothFilter->GetOutput();
+}
+
+// Extrude a spline to create a curved plane
+vtkSmartPointer<vtkPolyData> SweepLineFixedDirection(vtkPolyData *line, double direction[3], double distance, unsigned int cols)
 {
   unsigned int rows = line->GetNumberOfPoints();
   double spacing = distance / cols;
@@ -239,8 +320,13 @@ double GetMeanDistanceBtwPoints(vtkSmartPointer<vtkPolyData> spline)
   {
     spline->GetPoint(i, p1);
     spline->GetPoint(i + 1, p2);
+    // std::cout << "dist " << sqrt(vtkMath::Distance2BetweenPoints(p1, p2)) << std::endl;
     sum += sqrt(vtkMath::Distance2BetweenPoints(p1, p2));
   }
+
+  std::cout << ">>> numberOfSegments  " << numberOfSegments << std::endl;
+  std::cout << ">>> sum  " << sum << std::endl;
+  std::cout << ">>> mean  " << sum / double(numberOfSegments) << std::endl;
 
   return sum / double(numberOfSegments);
 }
