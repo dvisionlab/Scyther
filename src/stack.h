@@ -174,7 +174,5 @@ float GetWindowWidth(std::vector<float> values, float max_, float min_)
     }
   }
 
-  std::cout << "max min " << max << ", " << min << std::endl;
-
   return max - min;
 }
