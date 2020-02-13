@@ -49,16 +49,6 @@
 
 // ==== DECLARATONS  ====
 
-std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
-                                                                std::vector<float> seeds,
-                                                                std::vector<float> tng,
-                                                                std::vector<float> ptn,
-                                                                unsigned int resolution,
-                                                                std::vector<int> dir,
-                                                                std::vector<float> stack_direction,
-                                                                float dist_slices,
-                                                                int n_slices,
-                                                                bool render);
 std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volumeFileName,
                                                                std::vector<float> seeds,
                                                                unsigned int resolution,
@@ -67,15 +57,26 @@ std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volum
                                                                float dist_slices,
                                                                int n_slices,
                                                                bool render);
+std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
+                                                                std::vector<float> seeds,
+                                                                std::vector<float> tng,
+                                                                std::vector<float> ptn,
+                                                                unsigned int resolution,
+                                                                std::vector<int> dir,
+                                                                std::vector<float> stack_direction,
+                                                                float slice_dimension,
+                                                                float dist_slices,
+                                                                int n_slices,
+                                                                bool render);
 std::vector<float> GetMetadata(vtkImageData *image);
 std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slice, int n_slices, std::vector<float> direction, float dist_slices);
 std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, float side_length, int resolution, std::vector<float> &iop_axial, std::vector<float> &ipp_axial);
 vtkSmartPointer<vtkPolyData> Squash(std::map<int, vtkSmartPointer<vtkPolyData>> stack_map, bool reverse);
 std::vector<float> GetPixelValues(vtkDataSet *dataset, bool reverse);
 std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> stack);
-float GetWindowWidth(vtkSmartPointer<vtkImageData> image);
+float GetWindowWidth(vtkSmartPointer<vtkImageData> image, float max, float min);
 vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, vtkPolyData *spline);
-int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *image, int resolution);
+int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *image, int resolution, float range);
 vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resolution, double origin[3], double normal[3], bool project);
 vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> directions, double distance, int cols);
 vtkSmartPointer<vtkPolyData> ShiftMasterSlice(vtkPolyData *original_surface, int index, std::vector<float> dir);

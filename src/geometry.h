@@ -74,10 +74,10 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
 // vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, double direction[3], double distance, unsigned int cols)
 vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> directions, double distance, int cols)
 {
+  std::cout << distance << ", " << cols << std::endl;
+
   unsigned int rows = line->GetNumberOfPoints();
   double spacing = distance / cols;
-  spacing = 1.0;
-  cols = 100;
 
   std::cout
       << "rows, cols: " << rows << ", " << cols << std::endl;

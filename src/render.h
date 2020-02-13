@@ -1,6 +1,6 @@
 
 // Paint pixels on a plane
-vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, vtkPolyData *spline)
+vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, vtkPolyData *spline, float slice_dimension)
 {
   float dist = GetMeanDistanceBtwPoints(spline);
   int nop = spline->GetNumberOfPoints();
@@ -9,7 +9,7 @@ vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, vtkPolyData *spline
 
   vtkSmartPointer<vtkPlaneSource> targetPlane = vtkSmartPointer<vtkPlaneSource>::New();
   targetPlane->SetOrigin(0.0, 0.0, 0.0);
-  targetPlane->SetPoint1(0.0, 1.0 * pixels->GetNumberOfValues() / nop, 0.0);
+  targetPlane->SetPoint1(0.0, slice_dimension, 0.0);
   targetPlane->SetPoint2(0.0, 0.0, dist * nop);
   targetPlane->SetXResolution(pixels->GetNumberOfValues() / nop - 1); // this -1 matches with cols++
   targetPlane->SetYResolution(nop);
@@ -23,13 +23,12 @@ vtkSmartPointer<vtkPolyData> GetPlanar(vtkDataArray *pixels, vtkPolyData *spline
 }
 
 // Render curved & plane surfaces
-int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *image, int resolution)
+int renderAll(vtkPolyData *spline, vtkProbeFilter *sampleVolume, vtkImageData *image, float slice_dimension, float range)
 {
-  vtkSmartPointer<vtkPolyData> viewPlane = GetPlanar(sampleVolume->GetOutput()->GetPointData()->GetArray("ImageFile"), spline);
+  vtkSmartPointer<vtkPolyData> viewPlane = GetPlanar(sampleVolume->GetOutput()->GetPointData()->GetArray("ImageFile"), spline, slice_dimension);
 
   // Compute a simple window/level based on scalar range
   vtkSmartPointer<vtkWindowLevelLookupTable> wlLut = vtkSmartPointer<vtkWindowLevelLookupTable>::New();
-  double range = GetWindowWidth(image);
   double level = range / 2.0;
 
   wlLut->SetWindow(range);

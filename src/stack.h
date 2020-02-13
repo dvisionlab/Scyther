@@ -1,5 +1,3 @@
-
-
 std::vector<float> GetMetadata(vtkImageData *image)
 {
   // Store the image and print some infos
@@ -158,8 +156,25 @@ std::vector<float> GetDimensions(std::map<int, vtkSmartPointer<vtkPolyData>> sta
   return dimensions;
 }
 
-float GetWindowWidth(vtkSmartPointer<vtkImageData> image)
+// float GetWindowWidth(vtkSmartPointer<vtkImageData> image)
+float GetWindowWidth(std::vector<float> values, float max_, float min_)
 {
-  float range = image->GetScalarRange()[1] - image->GetScalarRange()[0];
-  return range;
+  float max = min_;
+  float min = max_;
+
+  for (int v = 0; v < values.size(); v++)
+  {
+    if (values[v] > max)
+    {
+      max = values[v];
+    }
+    if (values[v] < min)
+    {
+      min = values[v];
+    }
+  }
+
+  std::cout << "max min " << max << ", " << min << std::endl;
+
+  return max - min;
 }
