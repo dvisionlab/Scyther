@@ -1,6 +1,3 @@
-// comment this line if vmtk is compiled static on Linux: exclude rendering vtk libs
-#define DYNAMIC_VMTK
-
 // std libs
 #include <vector>
 #include <time.h>
