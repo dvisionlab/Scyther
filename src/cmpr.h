@@ -132,14 +132,14 @@ std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volu
     return response;
 }
 
-std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volumeFileName,
-                                                               std::vector<float> seeds,
-                                                               unsigned int resolution,
-                                                               std::vector<int> dir,
-                                                               std::vector<float> stack_direction,
-                                                               float dist_slices,
-                                                               int n_slices,
-                                                               bool render)
+std::map<std::string, std::vector<float> *> compute_cmpr_stretch(std::string volumeFileName,
+                                                                 std::vector<float> seeds,
+                                                                 unsigned int resolution,
+                                                                 std::vector<int> dir,
+                                                                 std::vector<float> stack_direction,
+                                                                 float dist_slices,
+                                                                 int n_slices,
+                                                                 bool render)
 {
     time_t time_0;
     time(&time_0);
@@ -233,8 +233,6 @@ std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volum
     std::vector<float> values_cmpr = GetPixelValues(sampleVolume->GetOutput(), false);
     std::vector<float> values_axial = GetPixelValues(sampleVolumeAxial->GetOutput(), true);
 
-    std::map<std::string, std::vector<float>> response;
-
     // Compute mean distance btw points to be returned as image spacing
     float mean_pts_distance = GetMeanDistanceBtwPoints(spline);
     float range_cmpr = GetWindowWidth(values_cmpr, reader->GetOutput()->GetScalarRange()[1], reader->GetOutput()->GetScalarRange()[0]);
@@ -247,6 +245,8 @@ std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volum
         int res = renderAll(original_spline, sampleVolume, reader->GetOutput(), distance, range_cmpr);
     }
 #endif
+
+    std::map<std::string, std::vector<float> *> response;
 
     // Compose response with metadata
     std::vector<float> dimension_cmpr = {
@@ -268,17 +268,17 @@ std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volum
         range_axial,
         range_axial / 2};
 
-    response["metadata"] = metadata;
-    response["pixels_cmpr"] = values_cmpr;
-    response["pixels_axial"] = values_axial;
-    response["dimension_cmpr"] = dimension_cmpr;
-    response["dimension_axial"] = dimension_axial;
-    response["spacing_cmpr"] = spacing_cmpr;
-    response["spacing_axial"] = spacing_axial;
-    response["wwwl_cmpr"] = wwwl_cmpr;
-    response["wwwl_axial"] = wwwl_axial;
-    response["iop_axial"] = iop_axial;
-    response["ipp_axial"] = ipp_axial;
+    response["metadata"] = &metadata;
+    response["pixels_cmpr"] = &values_cmpr;
+    response["pixels_axial"] = &values_axial;
+    response["dimension_cmpr"] = &dimension_cmpr;
+    response["dimension_axial"] = &dimension_axial;
+    response["spacing_cmpr"] = &spacing_cmpr;
+    response["spacing_axial"] = &spacing_axial;
+    response["wwwl_cmpr"] = &wwwl_cmpr;
+    response["wwwl_axial"] = &wwwl_axial;
+    response["iop_axial"] = &iop_axial;
+    response["ipp_axial"] = &ipp_axial;
 
     return response;
 }

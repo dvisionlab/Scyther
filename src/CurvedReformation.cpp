@@ -46,14 +46,14 @@
 
 // ==== DECLARATONS  ====
 
-std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volumeFileName,
-                                                               std::vector<float> seeds,
-                                                               unsigned int resolution,
-                                                               std::vector<int> dir,
-                                                               std::vector<float> stack_direction,
-                                                               float dist_slices,
-                                                               int n_slices,
-                                                               bool render);
+std::map<std::string, std::vector<float> *> compute_cmpr_stretch(std::string volumeFileName,
+                                                                 std::vector<float> seeds,
+                                                                 unsigned int resolution,
+                                                                 std::vector<int> dir,
+                                                                 std::vector<float> stack_direction,
+                                                                 float dist_slices,
+                                                                 int n_slices,
+                                                                 bool render);
 std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
                                                                 std::vector<float> seeds,
                                                                 std::vector<float> tng,
