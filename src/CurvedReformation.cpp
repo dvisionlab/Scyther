@@ -3,8 +3,13 @@
 #include <time.h>
 
 // pybind lib
+#ifdef USE_PYBIND
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#endif
+
+// picojson
+#include "picojson.h"
 
 // vtk stuff
 #include <vtkSmartPointer.h>
@@ -101,6 +106,50 @@ double GetMeanDistanceBtwPoints(vtkSmartPointer<vtkPolyData> spline);
 // - return stack dimensions DONE
 // - return the list of the keys present in the response, in order to avoid python remaining stuck trying to read something that doesn't exist
 
+std::string LoadFile(const std::string &path)
+{
+  auto ss = std::ostringstream{};
+  std::ifstream file(path);
+  ss << file.rdbuf();
+  return ss.str();
+}
+
+std::vector<int> ArrayToVectorInteger(picojson::array input_array)
+{
+  std::vector<int> output_vect = {};
+
+  for (int s = 0; s < input_array.size(); s++)
+  {
+    output_vect.push_back((int)input_array[s].get<double>());
+  }
+
+  // for (int i = 0; i < output_vect.size(); i++)
+  // {
+  //   std::cout << i << ", " << output_vect[i] << std::endl;
+  // }
+
+  return output_vect;
+}
+
+std::vector<float> ArrayToVectorFloat(picojson::array input_array)
+{
+  std::vector<double> output_vect = {};
+
+  for (int s = 0; s < input_array.size(); s++)
+  {
+    output_vect.push_back(input_array[s].get<double>());
+  }
+
+  // for (int i = 0; i < output_vect.size(); i++)
+  // {
+  //   std::cout << i << ", " << output_vect[i] << std::endl;
+  // }
+
+  std::vector<float> output_float(output_vect.begin(), output_vect.end());
+
+  return output_float;
+}
+
 int main(int argc, char *argv[])
 {
   // TODO get input from argv:
@@ -110,40 +159,129 @@ int main(int argc, char *argv[])
   // - direction
   // then convert file to points array
 
-  // Verify arguments
-  if (argc < 4)
+  // READ FILE
+  std::cout << "Reading inputs from : " << argv[1] << std::endl;
+
+  std::string content = LoadFile(argv[1]);
+
+  // std::cout << content << std::endl;
+
+  // PARSE JSON
+  picojson::value v;
+  std::string err = picojson::parse(v, content);
+  if (!err.empty())
   {
-    std::cout << "Usage: " << argv[0]
-              << " InputVolume PolyDataInput"
-              << " Resolution"
-              << std::endl;
-    return EXIT_FAILURE;
+  std:
+    cerr << err << std::endl;
   }
 
-  // Parse arguments
-  std::string volumeFileName = argv[1];
-  std::string polyDataFileName = argv[2];
+  // std::cout << v << std::endl;
+
+  // check if the type of the value is "object"
+  if (!v.is<picojson::object>())
+  {
+    std::cerr << "JSON is not an object" << std::endl;
+    exit(2);
+  }
+
+  std::string method = "";
+  std::string volume_file_path = "";
+  std::vector<float> seeds = {};
+  std::vector<float> tng = {};
+  std::vector<float> ptn = {};
   unsigned int resolution;
+  std::vector<int> dir;
+  std::vector<float> stack_direction;
+  float dist_slices;
+  float slice_dimension;
+  int n_slices;
+  bool render;
 
-  // Output arguments
-  std::cout << "InputVolume: " << volumeFileName << std::endl
-            << "PolyDataInput: " << polyDataFileName << std::endl
-            << "Resolution: " << resolution << std::endl;
+  const picojson::value::object &obj = v.get<picojson::object>();
+  for (picojson::value::object::const_iterator i = obj.begin();
+       i != obj.end();
+       ++i)
+  {
+    std::cout << i->first << " : " << i->second.to_str() << std::endl;
 
-  // Read the Polyline
-  vtkSmartPointer<vtkPolyDataReader> polyLineReader =
-      vtkSmartPointer<vtkPolyDataReader>::New();
-  polyLineReader->SetFileName(polyDataFileName.c_str());
-  polyLineReader->Update();
+    if (i->first == "method")
+    {
+      method = i->second.get<std::string>();
+    }
+    else if (i->first == "volume_file_path")
+    {
+      volume_file_path = i->second.get<std::string>();
+    }
+    else if (i->first == "seeds")
+    {
+      picojson::array p_array = i->second.get<picojson::array>();
+      seeds = ArrayToVectorFloat(p_array);
+    }
+    else if (i->first == "resolution")
+    {
+      resolution = (unsigned int)i->second.get<double>();
+    }
+    else if (i->first == "dist_slices")
+    {
+      dist_slices = (float)i->second.get<double>();
+    }
+    else if (i->first == "render")
+    {
+      render = i->second.get<bool>();
+    }
+    else if (i->first == "sweep_dir")
+    {
+      picojson::array p_array = i->second.get<picojson::array>();
+      dir = ArrayToVectorInteger(p_array);
+    }
+    else if (i->first == "stack_direction")
+    {
+      picojson::array p_array = i->second.get<picojson::array>();
+      stack_direction = ArrayToVectorFloat(p_array);
+    }
+    else if (i->first == "tng")
+    {
+      picojson::array p_array = i->second.get<picojson::array>();
+      tng = ArrayToVectorFloat(p_array);
+    }
+    else if (i->first == "ptn")
+    {
+      picojson::array p_array = i->second.get<picojson::array>();
+      ptn = ArrayToVectorFloat(p_array);
+    }
+    else if (i->first == "slice_dimension")
+    {
+      slice_dimension = (float)i->second.get<double>();
+    }
+    else if (i->first == "n_slices")
+    {
+      n_slices = (int)i->second.get<double>();
+    }
+  }
 
-  std::cout << "---> " << polyLineReader->GetOutput()->GetNumberOfPoints() << std::endl;
+  // CALL METHOD
+  if (method == "straight")
+  {
+    compute_cmpr_straight(volume_file_path, seeds, tng, ptn, resolution, dir, stack_direction, slice_dimension, dist_slices, n_slices, render);
+  }
+  else if (method == "stretched")
+  {
+    compute_cmpr_stretch(volume_file_path, seeds, resolution, dir, stack_direction, dist_slices, n_slices, render);
+  }
+  else
+  {
+    std::cout << "NO METHOD" << std::endl;
+    exit(1);
+  }
 
   return 0;
 }
 
+#ifdef USE_PYBIND
 // define a module to be imported by python
 PYBIND11_MODULE(pyCmpr, m)
 {
   m.def("compute_cmpr_straight", &compute_cmpr_straight, "", "");
   m.def("compute_cmpr_stretch", &compute_cmpr_stretch, "", "");
 }
+#endif

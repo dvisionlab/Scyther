@@ -17,10 +17,24 @@ std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volu
     double direction[3];
     std::copy(dir.begin(), dir.end(), direction);
 
+    std::cout << "\n >> compute_cmpr_straight << \n"
+              << std::endl;
+
     // Print arguments
-    std::cout << "InputVolume: " << volumeFileName << std::endl
-              << "Resolution: " << resolution << std::endl
-              << "Seeds: " << seeds.size() / 3 << std::endl;
+    std::cout
+        << "InputVolume: " << volumeFileName << std::endl
+        << "Resolution: " << resolution << std::endl
+        << "Seeds: " << seeds.size() / 3 << std::endl
+        << "tng: " << tng.size() / 3 << std::endl
+        << "ptn: " << ptn.size() / 3 << std::endl
+        << "dir: " << dir[0] << ", " << dir[1] << ", " << dir[2] << std::endl
+        << "stack_direction: " << stack_direction[0] << ", " << stack_direction[1] << ", " << stack_direction[2] << std::endl
+        << "slice_dimension: " << slice_dimension << std::endl
+        << "dist_slices: " << dist_slices << std::endl
+        << "n_slices: " << n_slices << std::endl
+        << "render: " << render << std::endl
+        << " == END PARAMS == \n"
+        << std::endl;
 
     // Read the volume data
     vtkSmartPointer<vtkNrrdReader> reader = vtkSmartPointer<vtkNrrdReader>::New();
@@ -43,14 +57,22 @@ std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volu
     vtkSmartPointer<vtkPolyData> original_spline = vtkSmartPointer<vtkPolyData>::New();
     original_spline = CreateSpline(seeds, resolution, origin, neg_direction, false);
 
+    std::cout << " > CreateSpline OK " << std::endl;
+
     // Sweep the line to form a surface
     vtkSmartPointer<vtkPolyData> master_slice = SweepLine(original_spline, ptn, slice_dimension, resolution);
+
+    std::cout << " > SweepLine OK " << std::endl;
 
     // Shift the master slice to create a stack
     std::map<int, vtkSmartPointer<vtkPolyData>> stack_map = CreateStack(master_slice, n_slices, stack_direction, dist_slices);
 
+    std::cout << " > CreateStack OK " << std::endl;
+
     // Squash stack map into a single polydata
     vtkSmartPointer<vtkPolyData> complete_stack = Squash(stack_map, false);
+
+    std::cout << " > Squash OK " << std::endl;
 
     // Compute axial stack
     float axial_side_length = 120.0;

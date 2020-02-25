@@ -74,13 +74,11 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
 // vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, double direction[3], double distance, unsigned int cols)
 vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> directions, double distance, int cols)
 {
-  std::cout << distance << ", " << cols << std::endl;
-
   unsigned int rows = line->GetNumberOfPoints();
   double spacing = distance / cols;
 
   std::cout
-      << "rows, cols: " << rows << ", " << cols << std::endl;
+      << "rows, cols, spacing: " << rows << ", " << cols << ", " << spacing << std::endl;
 
   vtkSmartPointer<vtkPolyData> surface = vtkSmartPointer<vtkPolyData>::New();
 
@@ -94,6 +92,8 @@ vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> dir
   vtkSmartPointer<vtkCellArray> polys =
       vtkSmartPointer<vtkCellArray>::New();
   polys->Allocate(numberOfPolys * 4);
+
+  std::cout << "1" << std::endl;
 
   double x[3], direction[3];
   unsigned int cnt = 0;
@@ -112,6 +112,9 @@ vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> dir
       points->InsertPoint(cnt++, x);
     }
   }
+
+  std::cout << "2" << std::endl;
+
   // Generate the quads
   vtkIdType pts[4];
   for (unsigned int row = 0; row < rows - 1; row++)
@@ -127,6 +130,8 @@ vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> dir
   }
   surface->SetPoints(points);
   surface->SetPolys(polys);
+
+  std::cout << "3" << std::endl;
 
   vtkSmartPointer<vtkTriangleFilter> triangleFilter =
       vtkSmartPointer<vtkTriangleFilter>::New();
