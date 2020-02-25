@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(pyCmpr)
 
-# define precompiler flag
-add_compile_definitions(DYNAMIC_VMTK)
+# define prepcompiler flag
+# add_compile_definitions(DYNAMIC_VMTK)
 # add_compile_definitions(USE_PYBIND)
 
 # include vtk headers
@@ -42,10 +42,6 @@ ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 # adds a library pybindings that can be called by python
 pybind11_add_module(pyCmpr CurvedReformation.cpp)
 
-# adds exec
-add_executable(cmpr CurvedReformation.cpp)
-
 # link external libraries
 set_property(TARGET pyCmpr PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(pyCmpr PRIVATE ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${vmtk})
-target_link_libraries(cmpr PRIVATE ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${vmtk})
+target_link_libraries(pyCmpr PRIVATE ${VTK_LIBRARIES} ${ITK_LIBRARIES} ${vmtk} )

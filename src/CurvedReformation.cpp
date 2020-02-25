@@ -97,13 +97,6 @@ double GetMeanDistanceBtwPoints(vtkSmartPointer<vtkPolyData> spline);
 #include "test.h"
 
 // TODO
-// - project spline on volume bound plane using extrusion direction negated DONE
-// - create stack in both direction DONE
-// - return metadata DONE
-// - set ifdef for linking static vmtk DONE
-// - create pseudo axial stack (slices along spline) DONE
-// - render source spline for debug DONE
-// - return stack dimensions DONE
 // - return the list of the keys present in the response, in order to avoid python remaining stuck trying to read something that doesn't exist
 
 std::string LoadFile(const std::string &path)
@@ -123,11 +116,6 @@ std::vector<int> ArrayToVectorInteger(picojson::array input_array)
     output_vect.push_back((int)input_array[s].get<double>());
   }
 
-  // for (int i = 0; i < output_vect.size(); i++)
-  // {
-  //   std::cout << i << ", " << output_vect[i] << std::endl;
-  // }
-
   return output_vect;
 }
 
@@ -140,11 +128,6 @@ std::vector<float> ArrayToVectorFloat(picojson::array input_array)
     output_vect.push_back(input_array[s].get<double>());
   }
 
-  // for (int i = 0; i < output_vect.size(); i++)
-  // {
-  //   std::cout << i << ", " << output_vect[i] << std::endl;
-  // }
-
   std::vector<float> output_float(output_vect.begin(), output_vect.end());
 
   return output_float;
@@ -152,30 +135,17 @@ std::vector<float> ArrayToVectorFloat(picojson::array input_array)
 
 int main(int argc, char *argv[])
 {
-  // TODO get input from argv:
-  // - nrrd file path
-  // - vtk polyline file path
-  // - resolution
-  // - direction
-  // then convert file to points array
-
   // READ FILE
   std::cout << "Reading inputs from : " << argv[1] << std::endl;
-
   std::string content = LoadFile(argv[1]);
-
-  // std::cout << content << std::endl;
 
   // PARSE JSON
   picojson::value v;
   std::string err = picojson::parse(v, content);
   if (!err.empty())
   {
-  std:
-    cerr << err << std::endl;
+    std::cerr << err << std::endl;
   }
-
-  // std::cout << v << std::endl;
 
   // check if the type of the value is "object"
   if (!v.is<picojson::object>())
@@ -270,7 +240,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    std::cout << "NO METHOD" << std::endl;
+    std::cout << "NO METHOD PROVIDED" << std::endl;
     exit(1);
   }
 
