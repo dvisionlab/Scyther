@@ -1,4 +1,5 @@
-std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
+// std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
+std::map<std::string, py::array_t<float>> compute_cmpr_straight(std::string volumeFileName,
                                                                 std::vector<float> seeds,
                                                                 std::vector<float> tng,
                                                                 std::vector<float> ptn,
@@ -103,7 +104,14 @@ std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volu
     std::vector<float> values_cmpr = GetPixelValues(sampleVolume->GetOutput(), false);
     std::vector<float> values_axial = GetPixelValues(sampleVolumeAxial->GetOutput(), true);
 
-    std::map<std::string, std::vector<float>> response;
+    std::vector<float> *result = new std::vector<float>(GetPixelValues(sampleVolume->GetOutput(), false));
+    py::capsule free_when_done(result, [](void *f) {
+        auto foo = reinterpret_cast<std::vector<float> *>(f);
+        delete foo;
+    });
+
+    // std::map<std::string, std::vector<float>> response;
+    std::map<std::string, py::array_t<float>> response;
 
     // Compute mean distance btw points to be returned as image spacing
     float mean_pts_distance = GetMeanDistanceBtwPoints(original_spline);
@@ -139,17 +147,21 @@ std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volu
         range_axial,
         range_axial / 2};
 
-    response["metadata"] = metadata;
-    response["pixels_cmpr"] = values_cmpr;
-    response["pixels_axial"] = values_axial;
-    response["dimension_cmpr"] = dimension_cmpr;
-    response["dimension_axial"] = dimension_axial;
-    response["spacing_cmpr"] = spacing_cmpr;
-    response["spacing_axial"] = spacing_axial;
-    response["wwwl_cmpr"] = wwwl_cmpr;
-    response["wwwl_axial"] = wwwl_axial;
-    response["iop_axial"] = iop_axial;
-    response["ipp_axial"] = ipp_axial;
+    // response["metadata"] = metadata;
+    // response["pixels_cmpr"] = values_cmpr;
+    response["pixels_cmpr"] = py::array_t<float>({result->size()}, // shape
+                                                 {sizeof(float)},  // stride
+                                                 result->data(),   // data pointer
+                                                 free_when_done);
+    // response["pixels_axial"] = values_axial;
+    // response["dimension_cmpr"] = dimension_cmpr;
+    // response["dimension_axial"] = dimension_axial;
+    // response["spacing_cmpr"] = spacing_cmpr;
+    // response["spacing_axial"] = spacing_axial;
+    // response["wwwl_cmpr"] = wwwl_cmpr;
+    // response["wwwl_axial"] = wwwl_axial;
+    // response["iop_axial"] = iop_axial;
+    // response["ipp_axial"] = ipp_axial;
 
     return response;
 }

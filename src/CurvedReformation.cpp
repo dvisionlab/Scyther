@@ -6,7 +6,10 @@
 #ifdef USE_PYBIND
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #endif
+
+namespace py = pybind11;
 
 // picojson
 #include "picojson.h"
@@ -51,25 +54,28 @@
 
 // ==== DECLARATONS  ====
 
-std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volumeFileName,
-                                                               std::vector<float> seeds,
-                                                               unsigned int resolution,
-                                                               std::vector<int> dir,
-                                                               std::vector<float> stack_direction,
-                                                               float dist_slices,
-                                                               int n_slices,
-                                                               bool render);
-std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
-                                                                std::vector<float> seeds,
-                                                                std::vector<float> tng,
-                                                                std::vector<float> ptn,
-                                                                unsigned int resolution,
-                                                                std::vector<int> dir,
-                                                                std::vector<float> stack_direction,
-                                                                float slice_dimension,
-                                                                float dist_slices,
-                                                                int n_slices,
-                                                                bool render);
+std::map<std::string, std::vector<float>>
+compute_cmpr_stretch(std::string volumeFileName,
+                     std::vector<float> seeds,
+                     unsigned int resolution,
+                     std::vector<int> dir,
+                     std::vector<float> stack_direction,
+                     float dist_slices,
+                     int n_slices,
+                     bool render);
+std::map<std::string, py::array_t<float>>
+compute_cmpr_straight(std::string volumeFileName,
+                      // std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volumeFileName,
+                      std::vector<float> seeds,
+                      std::vector<float> tng,
+                      std::vector<float> ptn,
+                      unsigned int resolution,
+                      std::vector<int> dir,
+                      std::vector<float> stack_direction,
+                      float slice_dimension,
+                      float dist_slices,
+                      int n_slices,
+                      bool render);
 std::vector<float> GetMetadata(vtkImageData *image);
 std::map<int, vtkSmartPointer<vtkPolyData>> CreateStack(vtkPolyData *master_slice, int n_slices, std::vector<float> direction, float dist_slices);
 std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline, float side_length, int resolution, std::vector<float> &iop_axial, std::vector<float> &ipp_axial);
