@@ -81,6 +81,8 @@ std::map<int, vtkSmartPointer<vtkPolyData>> CreateAxialStack(vtkPolyData *spline
     stack[frame] = targetPlane;
   }
 
+  std::cout << "axial slices : " << stack.size() << std::endl;
+
   return stack;
 }
 

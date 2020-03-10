@@ -71,12 +71,9 @@ vtkSmartPointer<vtkPolyData> CreateSpline(std::vector<float> seeds, int resoluti
 }
 
 // Extrude a spline to create a curved plane
-// vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, double direction[3], double distance, unsigned int cols)
 vtkSmartPointer<vtkPolyData> SweepLine(vtkPolyData *line, std::vector<float> directions, double distance, int cols)
 {
-  std::cout << distance << ", " << cols << std::endl;
-
-  unsigned int rows = line->GetNumberOfPoints();
+  unsigned int rows = line->GetNumberOfPoints() - 1; // we use n-1 pts in axial stack
   double spacing = distance / cols;
 
   std::cout
@@ -320,13 +317,8 @@ double GetMeanDistanceBtwPoints(vtkSmartPointer<vtkPolyData> spline)
   {
     spline->GetPoint(i, p1);
     spline->GetPoint(i + 1, p2);
-    // std::cout << "dist " << sqrt(vtkMath::Distance2BetweenPoints(p1, p2)) << std::endl;
     sum += sqrt(vtkMath::Distance2BetweenPoints(p1, p2));
   }
-
-  std::cout << ">>> numberOfSegments  " << numberOfSegments << std::endl;
-  std::cout << ">>> sum  " << sum << std::endl;
-  std::cout << ">>> mean  " << sum / double(numberOfSegments) << std::endl;
 
   return sum / double(numberOfSegments);
 }
