@@ -99,7 +99,7 @@ std::map<std::string, std::vector<float>> compute_cmpr_straight(std::string volu
 
     // Compose response with metadata
     std::vector<float> dimension_cmpr = {
-        float(seeds.size() / 3),
+        float(seeds.size() / 3 - 1),
         float(resolution),
         GetDimensions(stack_map)[2]};
     std::vector<float>
@@ -149,9 +149,7 @@ std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volum
     std::copy(dir.begin(), dir.end(), direction);
 
     // Print arguments
-    std::cout << "InputVolume: " << volumeFileName << std::endl
-              << "Resolution: " << resolution << std::endl
-              << "Seeds: " << seeds.size() << std::endl;
+    std::cout << "InputVolume: " << volumeFileName << std::endl;
 
     // Read the volume data
     vtkSmartPointer<vtkNrrdReader> reader = vtkSmartPointer<vtkNrrdReader>::New();
@@ -193,8 +191,6 @@ std::map<std::string, std::vector<float>> compute_cmpr_stretch(std::string volum
     {
         distance = metadata[11] - metadata[10];
     }
-
-    std::cout << "sweep distance " << distance << std::endl;
 
     vtkSmartPointer<vtkPolyData> master_slice = SweepLineFixedDirection(spline, direction, distance, resolution);
 
